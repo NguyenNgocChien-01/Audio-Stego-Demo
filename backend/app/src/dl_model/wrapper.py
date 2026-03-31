@@ -71,30 +71,33 @@ def encode(cover_path, secret_input, output_path, **kwargs):
         sound[:actual_len] = torch.from_numpy(data[:actual_len])
         sound = sound.unsqueeze(0).to(DEVICE)
         
-        mag, phase = stft_transform.transform(sound)
+        mag, phase = stft_transform.transform(sound)  # full mag: [1, 4096, T]
         
-        # Cắt phổ về 512x512 để khớp với tín hiệu ẩn từ mạng nơ-ron
-        covers = mag[:, :512, :512].unsqueeze(1)
-        phases = phase[:, :512, :512].unsqueeze(1)
+        # Crop ONLY for the model input — keep full mag/phase for STFT inverse
+        covers = mag[:, :512, :512].unsqueeze(1)      # [1, 1, 512, 512]
+        phases_full = phase                            # keep full phase for inverse
 
         with torch.no_grad():
-            # Gọi forward chuẩn của mô hình
-            containers, revealed_internal = model(secrets, covers)
+            containers, revealed_internal = model(secrets, covers)  # containers: [1, 1, 512, 512]
 
+        # --- debug: internal check image ---
         extracted_test = revealed_internal.squeeze(0)
         if extracted_test.shape[0] == 4: 
             extracted_test = extracted_test[:3, :, :]
-            
         extracted_test = extracted_test.permute(1, 2, 0).cpu().numpy()
         t_min, t_max = extracted_test.min(), extracted_test.max()
         extracted_test = (extracted_test - t_min) / (t_max - t_min + 1e-9)
         extracted_test = np.clip(extracted_test * 255.0, 0, 255).astype(np.uint8)
-        
         test_dir = os.path.join(os.getcwd(), "outputs", "test")
         os.makedirs(test_dir, exist_ok=True)
         Image.fromarray(extracted_test).save(os.path.join(test_dir, "internal_check.png"))
 
-        container_wav_tensor = stft_transform.inverse(containers.squeeze(1), phases.squeeze(1))
+        # Patch model output back into the full mag tensor, then invert
+        mag_full_patched = mag.clone()                          # [1, 4096, T]
+        mag_full_patched[:, :512, :512] = containers.squeeze(1) # write back the 512x512 patch
+
+        # Now inverse uses full-size tensors — no channel mismatch
+        container_wav_tensor = stft_transform.inverse(mag_full_patched, phases_full)
         container_wav = container_wav_tensor.cpu().numpy()[0]
         
         final_stego_audio[:actual_len] = container_wav[:actual_len]
@@ -114,7 +117,7 @@ def encode(cover_path, secret_input, output_path, **kwargs):
     except Exception as e:
         traceback.print_exc()
         return {"status": "error", "message": str(e)}
-
+    
 def decode(stego_path, output_folder="outputs", **kwargs):
     try:
         algo_name = kwargs.get("algo_name", "unet")
