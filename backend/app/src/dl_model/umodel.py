@@ -1,4 +1,3 @@
-
 import torch
 import numpy as np
 import torch.nn as nn
@@ -108,6 +107,7 @@ class RevealNet(nn.Module):
                 replicas = torch.split(revealed, 256, 3)
                 replicas = tuple([torch.split(replicas[i], 256, 2) for i in range(2)])
                 replicas = replicas[0] + replicas[1]
+                
             if len(replicas) == len(self.decblocks):
                 revealed = torch.sum(torch.stack([replicas[i]*self.decblocks[i] for i in range(len(self.decblocks))]), dim=0)
             else:
@@ -151,12 +151,10 @@ class StegoUNet(nn.Module):
             if self.stft_small:
                 hidden_signal = torch.cat((hidden_signal*self.encblocks[0], hidden_signal*self.encblocks[1]), 2)
             else:
-                # ĐÃ CẬP NHẬT LOGIC NHÂN BẢN 8 PHẦN KHI STFT_SMALL = FALSE
-                h_split = hidden_signal
-                parts = [h_split * self.encblocks[i] for i in range(8)]
-                row1 = torch.cat(parts[0:4], 2)
-                row2 = torch.cat(parts[4:8], 2)
-                hidden_signal = torch.cat((row1, row2), 3)
+                parts = [hidden_signal * self.encblocks[i] for i in range(8)]
+                col1 = torch.cat(parts[0:4], 2)
+                col2 = torch.cat(parts[4:8], 2)
+                hidden_signal = torch.cat((col1, col2), 3)
 
         container = cover + hidden_signal
         revealed = self.RN(container)

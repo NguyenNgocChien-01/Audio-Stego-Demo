@@ -12,8 +12,9 @@ from app.db.database import get_db
 from app.db.models import StegoTransaction, AudioMetric, Algorithm
 
 # Import TẤT CẢ các thuật toán
-from app.src import lsb, phase, randomlsb 
+from app.src.traditional import randomlsb 
 from app.src.dl_model import wrapper
+from app.src.traditional import lsb, phase
 
 router = APIRouter(
     prefix="/stego",
@@ -79,10 +80,10 @@ async def api_encode(
             secret_input = secret_text
             payload_type = "text"
 
-        # 🚀 ĐỊNH TUYẾN THÔNG MINH (SMART ROUTING)
+        #  ĐỊNH TUYẾN THÔNG MINH (SMART ROUTING)
         if normalized_name == 'lsb':
             result = lsb.encode(temp_audio_path, secret_input, output_audio_path)
-        elif normalized_name == 'randomlsb':
+        elif normalized_name == 'randomlsb' or normalized_name == 'random lsb':
             result = randomlsb.encode(temp_audio_path, secret_input, output_audio_path, password)
         elif normalized_name == 'phase coding' or normalized_name == 'phase':
             result = phase.encode(temp_audio_path, secret_input, output_audio_path)
@@ -164,7 +165,7 @@ async def api_decode(
         # 🚀 ĐỊNH TUYẾN THÔNG MINH CHO DECODE
         if normalized_name == 'lsb':
             result = lsb.decode(temp_decode_path)
-        elif normalized_name == 'randomlsb':
+        elif normalized_name == 'randomlsb' or normalized_name == 'random lsb':
             result = randomlsb.decode(temp_decode_path, password)
         elif normalized_name == 'phase coding' or normalized_name == 'phase':
             result = phase.decode(temp_decode_path)

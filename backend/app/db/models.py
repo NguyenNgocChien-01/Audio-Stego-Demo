@@ -1,5 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey
-from sqlalchemy.dialects.postgresql import JSONB # Dùng JSONB của Postgres cho tốc độ cao
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, JSON, Table
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from app.db.database import Base
@@ -7,8 +6,18 @@ from app.db.database import Base
 def get_now():
     return datetime.now(timezone.utc)
 
+# -------------------------------------------------------------------
+# BẢNG TRUNG GIAN N-N (Algorithm - Payload)
+# -------------------------------------------------------------------
+algo_payload_association = Table(
+    'algorithm_payloads', Base.metadata,
+    Column('algo_id', Integer, ForeignKey('algorithms.algo_id', ondelete="CASCADE")),
+    Column('payload_id', Integer, ForeignKey('payloads.payload_id', ondelete="CASCADE"))
+)
 
-
+# -------------------------------------------------------------------
+# CÁC BẢNG DỮ LIỆU
+# -------------------------------------------------------------------
 class User(Base):
     __tablename__ = "users"
     user_id = Column(Integer, primary_key=True, index=True)
@@ -32,6 +41,12 @@ class Cateogry_Algorithm(Base):
     category_id = Column(Integer, primary_key=True, index=True)
     category_name = Column(String, unique=True)
 
+class Payload(Base):
+    __tablename__ = "payloads"
+    payload_id = Column(Integer, primary_key=True, index=True)
+    payload_code = Column(String(20), unique=True, nullable=False) # 'text', 'image', 'audio', 'file'
+    payload_name = Column(String(50), nullable=False)              # 'Văn bản', 'Hình ảnh'
+
 class Algorithm(Base):
     __tablename__ = "algorithms"
     algo_id = Column(Integer, primary_key=True, index=True)
@@ -39,8 +54,11 @@ class Algorithm(Base):
     category_id = Column(Integer, ForeignKey("category_algorithms.category_id"), nullable=True)
     is_active = Column(Boolean, default=True)
     model_file = Column(String, nullable=True) 
+    # requires_password = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=get_now)
     
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    # Quan hệ N-N với bảng Payload
+    supported_payloads = relationship("Payload", secondary=algo_payload_association)
 
 class StegoTransaction(Base):
     __tablename__ = "stego_transactions"
@@ -53,7 +71,8 @@ class StegoTransaction(Base):
     action_type = Column(String) # Encode / Decode
     payload_type = Column(String) # Text / File
     
-    algo_params = Column(JSONB, nullable=True) # JSONB tối ưu của Postgres
+    # Đã chuyển từ JSONB của Postgres sang JSON chung của SQLAlchemy
+    algo_params = Column(JSON, nullable=True) 
     
     status = Column(String, default="Success")
     timestamp = Column(DateTime, default=get_now)

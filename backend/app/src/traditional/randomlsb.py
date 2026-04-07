@@ -123,7 +123,7 @@ class Stego:
                 mask = (1 << k_try) - 1
                 extracted_values = (stego_flat[shuffled_indices] & mask).astype(np.uint8)
                 bits_matrix = np.unpackbits(extracted_values[:, np.newaxis], axis=1)
-                relevant_bits = bits_matrix[:, -k_try:] 
+                relevant_bits = bits_matrix[:, -k_try:][:, ::-1]  # Fix: reverse to get correct bit order
                 all_bytes = np.packbits(relevant_bits.flatten()).tobytes()
                 
                 pos = all_bytes.find(self.SENTINEL)
