@@ -22,14 +22,14 @@ stego/
 │   ├── app/
 │   │   ├── routers/         # stego, admin, users
 │   │   ├── db/              # SQLAlchemy models + engine
-│   │   └── src/             # lsb.py, randomlsb.py, phase.py, dl_model/
+│   │   └── src/             # lsb.py, randomlsb.py, phase.py
 │   └── uploads/             # file tạm + output stego
 ├── frontend/
 │   └── app/
 │       ├── encode/          # trang mã hóa
 │       ├── decode/          # trang giải mã
 │       └── admin/           # quản lý
-└── weights/                 # model checkpoint (*.pt)
+
 ```
 
 
