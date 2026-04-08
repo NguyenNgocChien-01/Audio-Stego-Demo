@@ -74,7 +74,7 @@ class AudioMetricResponse(BaseModel):
 class TransactionResponse(BaseModel):
     transaction_id: int
     action_type: str
-    payload_type: str
+    payload_type: Optional[str] = None
     status: str
     timestamp: datetime
     
