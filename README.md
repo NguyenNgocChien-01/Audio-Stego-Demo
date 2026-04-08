@@ -15,6 +15,7 @@ Hệ thống ẩn dữ liệu trong file âm thanh với nhiều thuật toán, 
 ---
 
 ## Cấu trúc
+```text
 stego/
 ├── backend/
 │   ├── main.py              # FastAPI app
@@ -29,11 +30,12 @@ stego/
 │       ├── decode/          # trang giải mã
 │       └── admin/           # quản lý
 └── weights/                 # model checkpoint (*.pt)
+```
 
 
 ---
 
-## 🚀 Cài đặt & Chạy
+##  Cài đặt & Chạy
 
 ### Backend
 ```bash
