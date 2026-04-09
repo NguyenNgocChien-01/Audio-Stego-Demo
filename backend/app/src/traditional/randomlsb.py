@@ -81,6 +81,7 @@ class Stego:
 
             salt = self._get_content_salt(audio_flat)
             seed = self._generate_seed(password if password else "default", salt)
+            print(f"[ENCODE] Salt: {salt} | Seed: {seed}")
             rng = np.random.default_rng(seed)
             
             shuffled_indices = rng.permutation(np.arange(self.ANCHOR_SIZE, len(audio_flat)))
@@ -115,6 +116,7 @@ class Stego:
             
             salt = self._get_content_salt(stego_flat)
             seed = self._generate_seed(password if password else "default", salt)
+            print(f"[DECODE] Salt: {salt} | Seed: {seed}")
             rng = np.random.default_rng(seed)
             
             shuffled_indices = rng.permutation(np.arange(self.ANCHOR_SIZE, len(stego_flat)))

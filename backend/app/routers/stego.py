@@ -76,16 +76,18 @@ async def api_encode(
         else:
             secret_input = secret_text
             payload_type = "text"
-
-        #  ĐỊNH TUYẾN THÔNG MINH (SMART ROUTING)
+        print(f" Password nhận được: {password}")
+        
         if normalized_name == 'lsb':
+            print("Nhúng bằng LSB")
             result = lsb.encode(temp_audio_path, secret_input, output_audio_path)
         elif normalized_name == 'randomlsb' or normalized_name == 'random lsb':
+            print("Nhúng bằng Random LSB")
             result = randomlsb.encode(temp_audio_path, secret_input, output_audio_path, password)
         elif normalized_name == 'phase coding' or normalized_name == 'phase':
+            print("Nhúng bằng Phase Coding")
             result = phase.encode(temp_audio_path, secret_input, output_audio_path)
         else:
-            # Nếu KHÔNG PHẢI thuật toán cổ điển -> MẶC ĐỊNH ĐẨY XUỐNG AI XỬ LÝ
             result = wrapper.encode(
                 cover_path=temp_audio_path, 
                 secret_input=secret_input, 
@@ -150,7 +152,7 @@ async def api_decode(
     if not algo_db or not algo_db.is_active:
         raise HTTPException(status_code=400, detail="Thuật toán không hợp lệ.")
     
-    print(f"[DEBUG API] Password nhận được: {password}")
+    print(f" Password nhận được: {password}")
     normalized_name = algo_db.algo_name.strip().lower() 
     unique_id = str(uuid.uuid4())[:8]
     temp_decode_path = os.path.join(UPLOAD_ROOT, f"temp_dec_{unique_id}.wav")
@@ -159,12 +161,15 @@ async def api_decode(
         with open(temp_decode_path, "wb") as buffer:
             shutil.copyfileobj(stego_audio.file, buffer)
 
-        # 🚀 ĐỊNH TUYẾN THÔNG MINH CHO DECODE
+        #  ĐỊNH TUYẾN THÔNG MINH CHO DECODE
         if normalized_name == 'lsb':
+            print("Giải mã bằng LSB")
             result = lsb.decode(temp_decode_path)
         elif normalized_name == 'randomlsb' or normalized_name == 'random lsb':
+            print("Giải mã bằng Random LSB")
             result = randomlsb.decode(temp_decode_path, password)
         elif normalized_name == 'phase coding' or normalized_name == 'phase':
+            print("Giải mã bằng Phase Coding")
             result = phase.decode(temp_decode_path)
         else:
             # MẶC ĐỊNH LÀ MÔ HÌNH AI
