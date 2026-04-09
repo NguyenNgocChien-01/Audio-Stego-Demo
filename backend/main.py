@@ -1,11 +1,11 @@
 from fastapi import FastAPI
-from app.routers import stego
+from app.routers import stego, auth
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 from app.db.database import Base, engine
 import app.db.models
-from app.routers import admin, users
+from app.routers import admin, users, transactions
 
 Base.metadata.create_all(bind=engine)  
 app = FastAPI(title="Stego App")
@@ -45,3 +45,5 @@ async def root():
 app.include_router(stego.router)
 app.include_router(admin.router)
 app.include_router(users.router)
+app.include_router(auth.router)
+app.include_router(transactions.router)

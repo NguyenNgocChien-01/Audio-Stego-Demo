@@ -2,16 +2,13 @@ import os
 import uuid
 import shutil
 import base64
-import math # <-- Đã thêm thư viện toán học
+import math 
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-
 from app.db.database import get_db
 from app.db.models import StegoTransaction, AudioMetric, Algorithm
-
-# Import TẤT CẢ các thuật toán
 from app.src.traditional import randomlsb 
 from app.src.dl_model import wrapper
 from app.src.traditional import lsb, phase
@@ -184,8 +181,15 @@ async def api_decode(
             db.commit()
             raise HTTPException(status_code=400, detail=result['message'])
 
+        payload_type_value = result.get('payload_type')
+        if not payload_type_value:
+            payload_type_value = "text" if 'content_text' in result or 'data' in result else "file"
+
         success_transaction = StegoTransaction(
-            action_type="Decode", algo_id=algo_id, status="Success",
+            action_type="Decode",
+            payload_type=payload_type_value,
+            algo_id=algo_id,
+            status="Success",
             algo_params={"k_detected": result.get('k_detected')}
         )
         db.add(success_transaction)
@@ -203,19 +207,16 @@ async def api_decode(
         
         #  ĐÃ SỬA: Chuyển ảnh AI thành Base64 thay vì FileResponse
         elif 'save_path' in result:
-             if result.get('type') == 'image':
-                 with open(result['save_path'], "rb") as img_file:
-                     encoded_string = base64.b64encode(img_file.read()).decode('utf-8')
-                 
-                 return {
-                     "status": "success",
-                     "payload_type": "file",
-                     "data": encoded_string,
-                     "message": "Trích xuất ảnh từ AI thành công!"
-                 }
-                 
-             return {"status": "success", "payload_type": "file", "message": f"Dữ liệu được lưu tại: {result['save_path']}"}
-
+             with open(result['save_path'], "rb") as f:
+                 file_data = f.read()
+             encoded_string = base64.b64encode(file_data).decode('utf-8')
+             
+             return {
+                 "status": "success",
+                 "payload_type": "file",
+                 "data": encoded_string,
+                 "message": "Dữ liệu nhị phân được trích xuất thành công!"
+             }
     except HTTPException:
         if os.path.exists(temp_decode_path): os.remove(temp_decode_path)
         raise
