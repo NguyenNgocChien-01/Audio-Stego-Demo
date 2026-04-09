@@ -48,6 +48,8 @@ class Stego:
             return mse, snr, psnr
 
     def encode(self, cover_path, secret_input, output_path, password=None):
+        if not password or not password.strip():
+            return {"status": "error", "message": "Bắt buộc phải nhập mật khẩu để đảm bảo an toàn mã hóa."}
         try:
             rate, audio_data = wavfile.read(cover_path)
             if audio_data.dtype != np.int16:
@@ -95,9 +97,7 @@ class Stego:
             
             mse, snr, psnr = self.calculate_metrics(audio_data, stego_data)
             
-            # ==========================================
-            # ĐÃ SỬA: Ép kiểu int() và float() ở đây
-            # ==========================================
+
             return {
                 "status": "success", 
                 "k": int(k), 
@@ -109,6 +109,7 @@ class Stego:
             return {"status": "error", "message": str(e)}
 
     def decode(self, stego_path, password=None):
+        
         try:
             rate, stego_data = wavfile.read(stego_path)
             stego_flat = stego_data.flatten()

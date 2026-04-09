@@ -2,6 +2,7 @@
 
 Hệ thống ẩn dữ liệu trong file âm thanh với nhiều thuật toán, giao diện web đầy đủ và bảng quản trị.
 
+![System Architecture](workflow.svg)
 ---
 
 ##  Tính năng
