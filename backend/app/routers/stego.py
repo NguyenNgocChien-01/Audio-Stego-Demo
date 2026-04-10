@@ -200,17 +200,44 @@ async def api_decode(
         db.add(success_transaction)
         db.commit()
 
-        # CHUẨN HÓA KẾT QUẢ TRẢ VỀ
+# CHUẨN HÓA KẾT QUẢ TRẢ VỀ
         if 'content_text' in result:
             return {"status": "success", "payload_type": "text", "data": result['content_text']}
+            
         elif 'data' in result:
-            raw_bytes = result['data']
-            try:
-                return {"status": "success", "k_detected": result.get('k_detected'), "payload_type": "text", "data": raw_bytes.decode('utf-8')}
-            except UnicodeDecodeError:
-                return {"status": "success", "k_detected": result.get('k_detected'), "payload_type": "file", "data": base64.b64encode(raw_bytes).decode('utf-8'), "message": "Binary data detected"}
+            raw_data = result['data']
+            
+            # 1. Nếu data đã là chuỗi (str) - do thuật toán RandomLSB trả về Base64
+            if isinstance(raw_data, str):
+                return {
+                    "status": "success", 
+                    "k_detected": result.get('k_detected'), 
+                    "payload_type": result.get('type', 'file'), # Ưu tiên type do thuật toán trả về, nếu không có thì mặc định là file
+                    "data": raw_data
+                }
+                
+            # 2. Nếu data là bytes thuần (do thuật toán LSB/Phase cũ trả về)
+            elif isinstance(raw_data, bytes):
+                try:
+                    # Cố gắng giải mã thành văn bản
+                    return {
+                        "status": "success", 
+                        "k_detected": result.get('k_detected'), 
+                        "payload_type": "text", 
+                        "data": raw_data.decode('utf-8')
+                    }
+                except UnicodeDecodeError:
+                    # Nếu là file nhị phân (hình ảnh, zip...), chuyển sang Base64
+                    encoded_str = base64.b64encode(raw_data).decode('utf-8')
+                    return {
+                        "status": "success", 
+                        "k_detected": result.get('k_detected'), 
+                        "payload_type": "file", 
+                        "data": encoded_str, 
+                        "message": "Binary data detected"
+                    }
         
-        #  ĐÃ SỬA: Chuyển ảnh AI thành Base64 thay vì FileResponse
+        # ĐÃ SỬA: Chuyển ảnh AI thành Base64 thay vì FileResponse
         elif 'save_path' in result:
              with open(result['save_path'], "rb") as f:
                  file_data = f.read()
