@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models import StegoTransaction, AudioMetric, Algorithm
 from app.src.traditional import randomlsb 
-from app.src.dl_model import wrapper
+# from app.src.dl_model import wrapper
 from app.src.traditional import lsb, phase
 
 router = APIRouter(
@@ -86,12 +86,13 @@ async def api_encode(
             result = phase.encode(temp_audio_path, secret_input, output_audio_path)
         else:
             # Nếu KHÔNG PHẢI thuật toán cổ điển -> MẶC ĐỊNH ĐẨY XUỐNG AI XỬ LÝ
-            result = wrapper.encode(
-                cover_path=temp_audio_path, 
-                secret_input=secret_input, 
-                output_path=output_audio_path, 
-                algo_name=normalized_name
-            )
+            # result = wrapper.encode(
+            #     cover_path=temp_audio_path, 
+            #     secret_input=secret_input, 
+            #     output_path=output_audio_path, 
+            #     algo_name=normalized_name
+            # )
+            print("Xuat Hien Loi")
 
         if os.path.exists(temp_audio_path): os.remove(temp_audio_path)
         if temp_secret_path and os.path.exists(temp_secret_path): os.remove(temp_secret_path)
@@ -167,12 +168,13 @@ async def api_decode(
         elif normalized_name == 'phase coding' or normalized_name == 'phase':
             result = phase.decode(temp_decode_path)
         else:
-            # MẶC ĐỊNH LÀ MÔ HÌNH AI
-            result = wrapper.decode(
-                stego_path=temp_decode_path, 
-                output_folder=STEGO_OUTPUT_DIR, 
-                algo_name=normalized_name
-            )
+            # # MẶC ĐỊNH LÀ MÔ HÌNH AI
+            # result = wrapper.decode(
+            #     stego_path=temp_decode_path, 
+            #     output_folder=STEGO_OUTPUT_DIR, 
+            #     algo_name=normalized_name
+            # )
+            print("Xuat Hien Loi")
 
         if os.path.exists(temp_decode_path): os.remove(temp_decode_path)
 
