@@ -1,0 +1,708 @@
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&display=swap');
+
+/* Fluent Design uses Segoe UI — fall back gracefully */
+:root {
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Brand */
+  --ms-blue:        #0078d4;
+  --ms-blue-dark:   #005a9e;
+  --ms-blue-light:  #deecf9;
+  --ms-teal:        #00b4d8;
+  --ms-teal-dark:   #007a99;
+  --ms-teal-light:  #d8f4fb;
+
+  /* Neutrals — Fluent palette */
+  --neutral-0:   #ffffff;
+  --neutral-20:  #f5f5f5;
+  --neutral-30:  #ebebeb;
+  --neutral-40:  #e0e0e0;
+  --neutral-60:  #c7c7c7;
+  --neutral-90:  #8a8a8a;
+  --neutral-130: #424242;
+  --neutral-160: #1b1b1b;
+
+  /* Semantic */
+  --bg:          #f3f2f1;   /* Microsoft shell background */
+  --surface:     #ffffff;
+  --surface-alt: #faf9f8;
+  --border:      #e1dfdd;
+  --text-primary:   #201f1e;
+  --text-secondary: #605e5c;
+  --text-tertiary:  #a19f9d;
+
+  --error:       #a4262c;
+  --success:     #107c10;
+
+  /* Fluent motion */
+  --ease-fluent: cubic-bezier(0.1, 0.9, 0.2, 1);
+  --dur-fast:    150ms;
+  --dur-normal:  200ms;
+  --dur-slow:    300ms;
+
+  /* Elevation shadows (Fluent depth) */
+  --shadow-2:  0 1px 2px rgba(0,0,0,.14), 0 0px 2px rgba(0,0,0,.12);
+  --shadow-4:  0 2px 4px rgba(0,0,0,.14), 0 0px 2px rgba(0,0,0,.12);
+  --shadow-8:  0 4px 8px rgba(0,0,0,.14), 0 0px 2px rgba(0,0,0,.12);
+  --shadow-16: 0 8px 16px rgba(0,0,0,.14), 0 0px 2px rgba(0,0,0,.12);
+  --shadow-64: 0 32px 64px rgba(0,0,0,.24), 0 2px 8px rgba(0,0,0,.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Page ── */
+.page {
+  font-family: var(--font);
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+}
+
+/* ── Top command bar (Microsoft shell chrome) ── */
+.ms-topbar {
+  width: 100%;
+  height: 48px;
+  background: var(--ms-blue);
+  display: flex;
+  align-items: center;
+  padding: 0 1.25rem;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+.ms-topbar__icon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fff;
+}
+.ms-topbar__app-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.01em;
+}
+.ms-topbar__sep {
+  width: 1px;
+  height: 18px;
+  background: rgba(255,255,255,0.3);
+  margin: 0 0.15rem;
+}
+.ms-topbar__subtitle {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.75);
+  font-weight: 400;
+}
+
+/* ── Content area ── */
+.ms-content {
+  width: 100%;
+  max-width: 760px;
+  padding: 2rem 1.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Animations ── */
+.fade-in {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity var(--dur-slow) var(--ease-fluent),
+              transform var(--dur-slow) var(--ease-fluent);
+}
+.fade-in.show { opacity: 1; transform: translateY(0); }
+
+/* ── Page header ── */
+.ms-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.ms-header__left {}
+.ms-header__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ms-blue);
+  margin-bottom: 0.3rem;
+}
+.ms-header__title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.ms-header__desc {
+  font-size: 0.87rem;
+  color: var(--text-secondary);
+  margin-top: 0.35rem;
+  line-height: 1.55;
+  max-width: 460px;
+}
+.ms-header__code {
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  background: var(--ms-blue-light);
+  color: var(--ms-blue-dark);
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  font-size: 0.88em;
+}
+.ms-header__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ms-blue);
+  background: var(--ms-blue-light);
+  border: 1px solid #c7e0f4;
+  border-radius: 3px;
+  padding: 0.3rem 0.6rem;
+  letter-spacing: 0.03em;
+}
+
+/* ── Fluent Pivot (tab bar) ── */
+.ms-pivot {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+.ms-pivot-btn {
+  padding: 0.7rem 1.1rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+  white-space: nowrap;
+  border-radius: 4px 4px 0 0;
+}
+.ms-pivot-btn:hover {
+  color: var(--text-primary);
+  background: var(--neutral-30);
+}
+.ms-pivot-btn.active {
+  color: var(--ms-blue);
+  border-bottom-color: var(--ms-blue);
+  font-weight: 600;
+}
+
+/* ── Card / Panel ── */
+.ms-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: var(--shadow-4);
+}
+.ms-card-body {
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.ms-card-header {
+  padding: 1rem 1.75rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── Section label ── */
+.ms-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 0.4rem;
+  font-family: var(--font);
+  letter-spacing: 0.01em;
+}
+
+/* ── Fluent TextField ── */
+.ms-textfield {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.ms-textfield__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.ms-textfield__input {
+  width: 100%;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--neutral-60);
+  border-radius: 3px;
+  padding: 0.6rem 0.75rem;
+  outline: none;
+  transition: border-color var(--dur-fast);
+  resize: vertical;
+}
+.ms-textfield__input::placeholder { color: var(--text-tertiary); }
+.ms-textfield__input:hover  { border-color: var(--neutral-130); }
+.ms-textfield__input:focus  {
+  border-color: var(--ms-blue);
+  border-width: 1px;
+  box-shadow: 0 0 0 1px var(--ms-blue);
+}
+.ms-textfield__input--decode:focus {
+  border-color: var(--ms-teal-dark);
+  box-shadow: 0 0 0 1px var(--ms-teal-dark);
+}
+
+/* ── Fluent Upload (CommandBar-style drop area) ── */
+.ms-dropzone {
+  border: 1px dashed var(--neutral-60);
+  border-radius: 3px;
+  padding: 1.4rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  background: var(--neutral-20);
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+.ms-dropzone:hover {
+  background: var(--ms-blue-light);
+  border-color: var(--ms-blue);
+}
+.ms-dropzone--decode:hover {
+  background: var(--ms-teal-light);
+  border-color: var(--ms-teal-dark);
+}
+.ms-dropzone__text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.ms-dropzone__text code {
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.88em;
+  background: var(--neutral-30);
+  padding: 0.05rem 0.3rem;
+  border-radius: 2px;
+}
+.ms-dropzone__link { color: var(--ms-blue); font-weight: 600; text-decoration: underline; cursor: pointer; }
+.ms-dropzone__link--decode { color: var(--ms-teal-dark); }
+.ms-dropzone__filename {
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.82rem;
+  color: var(--ms-blue-dark);
+  font-weight: 600;
+}
+
+/* ── Payload type — Fluent ChoiceGroup ── */
+.ms-choicegroup {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+.ms-choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.8rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--neutral-20);
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  transition: all var(--dur-fast);
+}
+.ms-choice-btn:hover {
+  background: var(--ms-blue-light);
+  border-color: var(--ms-blue);
+  color: var(--ms-blue-dark);
+}
+.ms-choice-btn.selected {
+  background: var(--ms-blue-light);
+  border-color: var(--ms-blue);
+  color: var(--ms-blue-dark);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--ms-blue);
+}
+.ms-choice-btn .type-icon { font-size: 1.3rem; line-height: 1; }
+
+/* ── Fluent PrimaryButton ── */
+.ms-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.6rem 1.25rem;
+  border: none;
+  border-radius: 3px;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur-fast), box-shadow var(--dur-fast);
+  line-height: 1.4;
+}
+.ms-btn--primary {
+  background: var(--ms-blue);
+  color: #fff;
+}
+.ms-btn--primary:hover    { background: var(--ms-blue-dark); }
+.ms-btn--primary:active   { background: #004d87; }
+
+.ms-btn--teal {
+  background: var(--ms-teal-dark);
+  color: #fff;
+}
+.ms-btn--teal:hover  { background: #006680; }
+.ms-btn--teal:active { background: #00566b; }
+
+.ms-btn:disabled {
+  background: var(--neutral-40) !important;
+  color: var(--neutral-90) !important;
+  cursor: not-allowed;
+}
+
+/* ── Payload file pick zone ── */
+.ms-payload-zone {
+  border: 1px dashed var(--neutral-60);
+  border-radius: 3px;
+  padding: 1.1rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  background: var(--neutral-20);
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+}
+.ms-payload-zone:hover { background: var(--ms-blue-light); border-color: var(--ms-blue); }
+.ms-payload-zone__text { font-size: 0.84rem; color: var(--text-secondary); }
+.ms-payload-zone__text code { font-family: 'Cascadia Code', 'Consolas', monospace; }
+.ms-payload-zone__filename {
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.82rem;
+  color: var(--ms-blue-dark);
+  font-weight: 600;
+}
+.ms-payload-hint {
+  font-size: 0.74rem;
+  color: var(--text-tertiary);
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
+/* ── Divider ── */
+.ms-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Message bar (result) ── */
+.ms-messagebar {
+  border-left: 3px solid var(--ms-teal-dark);
+  background: var(--ms-teal-light);
+  border-radius: 0 3px 3px 0;
+  padding: 0.9rem 1.1rem;
+  min-height: 60px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+.ms-messagebar__placeholder {
+  font-size: 0.83rem;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+.ms-messagebar__content {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  font-weight: 400;
+  line-height: 1.6;
+  word-break: break-word;
+}
+.ms-messagebar__error {
+  border-left-color: var(--error);
+  background: #fde7e9;
+}
+.ms-messagebar__error-text {
+  font-size: 0.83rem;
+  color: var(--error);
+  font-weight: 600;
+}
+.ms-download-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.85rem;
+  background: var(--ms-teal-dark);
+  color: #fff;
+  border-radius: 3px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--dur-fast);
+}
+.ms-download-link:hover { background: #006680; }
+
+/* ── Status bar footer ── */
+.ms-statusbar {
+  width: 100%;
+  position: sticky;
+  bottom: 0;
+  background: var(--neutral-30);
+  border-top: 1px solid var(--border);
+  padding: 0.3rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  z-index: 10;
+}
+.ms-statusbar__item {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+}
+.ms-statusbar__dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+/* ── Audio Player (Fluent style) ── */
+.ms-audio-player {
+  background: var(--neutral-20);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.ms-audio-player__top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.ms-audio-player__info {
+  flex: 1;
+  min-width: 0;
+}
+.ms-audio-player__filename {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+}
+.ms-audio-player__meta {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  margin-top: 0.1rem;
+}
+.ms-play-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: var(--ms-blue);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--dur-fast), transform var(--dur-fast);
+  box-shadow: var(--shadow-4);
+}
+.ms-play-btn:hover { background: var(--ms-blue-dark); transform: scale(1.05); }
+.ms-play-btn:active { transform: scale(0.97); }
+
+/* Progress / Seek bar */
+.ms-audio-player__seek {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.ms-seek-track {
+  flex: 1;
+  height: 3px;
+  background: var(--neutral-40);
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.ms-seek-fill {
+  height: 100%;
+  background: var(--ms-blue);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+  pointer-events: none;
+}
+.ms-seek-time {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  white-space: nowrap;
+  min-width: 38px;
+  text-align: right;
+}
+
+/* ── Stego Result Panel ── */
+.ms-result-panel {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  animation: fadeSlideIn 0.25s var(--ease-fluent);
+}
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ms-result-panel__header {
+  background: #dff6dd;
+  border-bottom: 1px solid #c3e6c3;
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ms-result-panel__header-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--success);
+}
+.ms-result-panel__body {
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.ms-result-panel__filename {
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.ms-result-panel__size {
+  font-size: 0.74rem;
+  color: var(--text-tertiary);
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  margin-top: 0.15rem;
+}
+.ms-result-panel__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+.ms-btn--download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  background: var(--ms-blue);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--dur-fast);
+}
+.ms-btn--download:hover { background: var(--ms-blue-dark); }
+.ms-btn--play-stego {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  background: var(--surface);
+  color: var(--ms-blue);
+  border: 1px solid var(--ms-blue);
+  border-radius: 3px;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur-fast);
+}
+.ms-btn--play-stego:hover { background: var(--ms-blue-light); }
+
+/* ── Metrics Grid ── */
+.ms-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+.ms-metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.ms-metric-card__label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+}
+.ms-metric-card__value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ms-blue-dark);
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  line-height: 1.2;
+}
+.ms-metric-card__unit {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+}
+.ms-metric-card--k {
+  border-left: 3px solid var(--ms-blue);
+}
+.ms-metric-card--psnr {
+  border-left: 3px solid var(--success);
+}
+.ms-metric-card--snr {
+  border-left: 3px solid var(--ms-teal-dark);
+}
