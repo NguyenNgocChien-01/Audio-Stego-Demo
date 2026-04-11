@@ -7,7 +7,7 @@ Hệ thống ẩn dữ liệu trong file âm thanh với nhiều thuật toán, 
 ##  Tính năng
 
 - **Encode/Decode** văn bản hoặc file ẩn trong audio WAV
-- **Đa thuật toán:** LSB, Random LSB (có mật khẩu), Phase Coding, Deep Learning (UNet)
+- **Đa thuật toán:** LSB, Random LSB, Phase Coding
 - **Đo chất lượng:** MSE / PSNR / SNR tự động sau mỗi lần encode
 - **Quản trị:** quản lý thuật toán, user, lịch sử transaction
 - **API docs** tích hợp sẵn tại `/docs`
