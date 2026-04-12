@@ -1,3 +1,4 @@
+version: '3.8'
 services:
   backend:
     build: ./backend
@@ -8,14 +9,16 @@ services:
     environment:
       - DB_PATH=/data/stego.db
       - UPLOAD_DIR=/data/uploads
-      - ALLOWED_ORIGINS=http://stegovps-audio.southeastasia.cloudapp.azure.com:3000
+      # 1. Cho phép Next.js ở local gọi vào API
+      - ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
     restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: http://stegovps-audio.southeastasia.cloudapp.azure.com:8000
+        # 2. Bắt buộc trình duyệt phải tìm Backend ở ngay trên máy tính của bạn
+        NEXT_PUBLIC_API_URL: http://localhost:8000
     ports:
       - "3000:3000"
     depends_on:
