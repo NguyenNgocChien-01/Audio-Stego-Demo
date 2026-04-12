@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { withAuth } from "../auth/withAuth";
+// import { withAuth } from "../auth/withAuth";
 // import { useAuthFetch } from "../auth/useAuthFetch"; 
 interface Algorithm { algo_id: number; algo_name: string; }
 type PayloadType = "text" | "image" | "audio" | "file";
@@ -308,7 +308,6 @@ function EncodePage() {
   const[selectedAlgoId,setSelectedAlgoId]=useState<string>("");
   const[encodeFile,setEncodeFile]=useState<File|null>(null);
   
-  // Mật khẩu này giờ chỉ dành riêng cho những thuật toán bắt buộc phải có (như Random LSB)
   const[encodePassword,setEncodePassword]=useState("");
   const[showPassword, setShowPassword]=useState(false);
   
@@ -325,8 +324,27 @@ function EncodePage() {
   const[secretMicFile,setSecretMicFile]=useState<File|null>(null);
   const[result,setResult]=useState<{url:string;filename:string;metrics:{mse:number;psnr:number;snr:number};k:number;algo_name?:string}|null>(null);
   const resultRef=useRef<HTMLDivElement>(null);
+useEffect(() => {
+  fetch("http://localhost:8000/stego/config")
+    .then((r) => r.json())
+    .then((data) => {
+      if (data && data.algorithms) {
+        // 1. Lọc các thuật toán đang hoạt động
+        // 2. Sắp xếp giảm dần theo algo_id
+        const active = data.algorithms
+          .filter((a: any) => a.is_active)
+          .sort((a: any, b: any) => b.algo_id - a.algo_id);
 
-  useEffect(()=>{ fetch("http://localhost:8000/admin/algorithms").then(r=>r.json()).then(data=>{ const active=data.filter((a:any)=>a.is_active); setAlgorithms(active); if(active.length>0)setSelectedAlgoId(active[0].algo_id.toString()); }).catch(console.error); },[]);
+        setAlgorithms(active);
+
+        // Chọn thuật toán đầu tiên trong danh sách đã sắp xếp
+        if (active.length > 0) {
+          setSelectedAlgoId(active[0].algo_id.toString());
+        }
+      }
+    })
+    .catch(console.error);
+}, []);
 
   const selectedAlgo=algorithms.find(a=>String(a.algo_id)===String(selectedAlgoId));
   const safeAlgoName=selectedAlgo?.algo_name?.trim().toLowerCase().replace(/\s+/g,'')||"";
@@ -350,37 +368,108 @@ function EncodePage() {
       :!!payloadFile
   )&&(!algoRequiresPassword||!!encodePassword);
 
-  const handleEncode=async()=>{
-    if(!encodeReady)return;
-    setLoading(true);setResult(null);
-    try{
-      const fd=new FormData();
-      fd.append("algo_id",selectedAlgoId);
-      fd.append("audio",encodeFile!);
-      
-      // Chỉ gửi mật khẩu của thuật toán nếu thuật toán đó cần
-      if(algoRequiresPassword && encodePassword) {
-        fd.append("password", encodePassword);
+const handleEncode = async () => {
+  if (!encodeReady) return;
+  setLoading(true);
+  setResult(null);
+
+  try {
+    const fd = new FormData();
+    fd.append("algo_id", selectedAlgoId);
+    fd.append("audio", encodeFile!);
+
+    if (algoRequiresPassword && encodePassword) {
+      fd.append("password", encodePassword);
+    }
+
+    if (payloadType === "text") {
+      if (secretInputMode === "mic" && secretMicFile) {
+        fd.append("secret_file", secretMicFile);
+      } else {
+        fd.append("secret_text", textMessage);
+        fd.append("encrypt_text", encryptText ? "true" : "false");
       }
-      
-      if(payloadType==="text"){
-        if(secretInputMode==="mic" && secretMicFile) {
-          fd.append("secret_file", secretMicFile);
-        } else { 
-          fd.append("secret_text", textMessage);
-          // Gửi cờ encrypt_text, backend sẽ dùng Master Key để mã hóa
-          fd.append("encrypt_text", encryptText ? "true" : "false");
-        }
+    } else if (payloadFile) {
+      fd.append("secret_file", payloadFile);
+    }
+
+    // CHỈ GỌI FETCH 1 LẦN DUY NHẤT
+    const res = await fetch("http://localhost:8000/stego/encode", { 
+      method: "POST", 
+      body: fd 
+    });
+
+    if (res.ok) {
+      // 1. Kiểm tra xem có phải JSON lỗi không (đề phòng backend trả về 200 nhưng lỗi)
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const errData = await res.json();
+        alert("Lỗi hệ thống: " + (errData.detail || "Không thể xử lý"));
+        return;
       }
-      else if(payloadFile) fd.append("secret_file",payloadFile);
-      
-      const res=await fetch("http://localhost:8000/stego/encode",{method:"POST",body:fd});
-      const data=await res.json();
-      if(res.ok&&data.status==="success"){ const fname=stegoFilename(encodeFile!.name,payloadType); setResult({url:`http://localhost:8000${data.download_url}`,filename:fname,metrics:data.metrics,k:data.k_used,algo_name:data.algo_name}); }
-      else alert("Lỗi: "+(data.detail||"Không thể xử lý"));
-    }catch{alert("Lỗi kết nối máy chủ");}
-    finally{setLoading(false);}
-  };
+
+      // 2. Đọc tệp tin (Blob)
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const fname = stegoFilename(encodeFile!.name, payloadType);
+
+      // 3. Trích xuất chỉ số từ HEADERS (Dùng đúng tên đã bỏ X-)
+      const h_mse = res.headers.get("Metrics-MSE");
+      const h_psnr = res.headers.get("Metrics-PSNR");
+      const h_snr = res.headers.get("Metrics-SNR");
+      const h_k = res.headers.get("Metrics-K");
+      const h_algo = res.headers.get("Algo-Name");
+
+      // Chuyển đổi dữ liệu để hiển thị
+      const metrics = {
+        mse: h_mse ? parseFloat(h_mse) : 0,
+        psnr: h_psnr ? parseFloat(h_psnr) : 0,
+        snr: h_snr ? parseFloat(h_snr) : 0
+      };
+      const k_val = h_k ? parseInt(h_k) : 0;
+      const algo_name = h_algo || selectedAlgo?.algo_name || "Unknown";
+
+      // 4. Cập nhật State kết quả
+      const newResult = {
+        url: blobUrl,
+        filename: fname,
+        metrics: metrics,
+        k: k_val,
+        algo_name: algo_name
+      };
+      setResult(newResult);
+
+      // 5. Lưu lịch sử vào LocalStorage (Lưu cả metrics để xem lại)
+      const historyItem = {
+        id: Date.now(),
+        filename: fname,
+        algo: algo_name,
+        type: payloadType,
+        metrics: metrics, // Lưu thêm cái này để trang History có dữ liệu
+        k: k_val,
+        date: new Date().toISOString()
+      };
+      const existingHistory = JSON.parse(localStorage.getItem("stego_history") || "[]");
+      existingHistory.unshift(historyItem);
+      localStorage.setItem("stego_history", JSON.stringify(existingHistory.slice(0, 20)));
+
+    } else {
+      // Xử lý lỗi HTTP
+      let errMsg = "Không thể xử lý";
+      try {
+        const errData = await res.json();
+        errMsg = errData.detail || errData.message || errMsg;
+      } catch (e) {}
+      alert("Lỗi: " + errMsg);
+    }
+  } catch (e) {
+    alert("Lỗi kết nối máy chủ");
+    console.error(e);
+  } finally {
+    setLoading(false);
+  }
+};
+
   // const handleDownload=()=>{ if(!result)return; const a=document.createElement("a"); a.href=result.url; a.download=result.filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); };
   const handleDownload = async () => {
     if (!result) return;
@@ -624,6 +713,6 @@ function EncodePage() {
   );
 }
 
-export default withAuth(EncodePage)
-// export default EncodePage;
+// export default withAuth(EncodePage)
+export default EncodePage;
 

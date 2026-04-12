@@ -1,94 +1,51 @@
 # file: app/schemas.py
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-from datetime import datetime
-# --- SCHEMAS CHO CATEGORY ---
 
-class CategoryBase(BaseModel):
-    category_name: str
+# --- SCHEMAS CHO CẤU HÌNH HỆ THỐNG (STATIC) ---
 
-class CategoryCreate(CategoryBase):
-    pass
-
-class CategoryResponse(CategoryBase):
-    category_id: int
-
-    class Config:
-        from_attributes = True
-
-
-# --- SCHEMAS CHO ALGORITHM ---
-
-class AlgorithmBase(BaseModel):
-    algo_name: str
-    category_id: Optional[int] = None
-    is_active: bool = True
-    model_file: Optional[str] = None #
-
-class AlgorithmCreate(AlgorithmBase):
-    pass
-
-class AlgorithmResponse(AlgorithmBase):
+class AlgorithmInfo(BaseModel):
+    """Sử dụng để trả về danh sách thuật toán hỗ trợ từ config.py"""
     algo_id: int
+    algo_name: str
+    category: str  # Ví dụ: 'Audio', 'Image'
+    is_active: bool
 
-    class Config:
-        from_attributes = True
+class PayloadTypeInfo(BaseModel):
+    """Sử dụng để trả về các loại payload hỗ trợ"""
+    payload_code: str
+    payload_name: str
 
+# --- SCHEMAS CHO KẾT QUẢ XỬ LÝ (METRICS) ---
 
-
-class UserBase(BaseModel):
-    username: str
-    is_admin: bool = False
-
-class UserCreate(UserBase):
-    password: str  # Frontend gửi password gốc lên
-
-class UserResponse(UserBase):
-    user_id: int
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-# --- SCHEMAS CHO AUDIO FILE ---
-class AudioFileResponse(BaseModel):
-    file_id: int
-    file_name: str
-    file_size_kb: Optional[int] = None
-    file_type: str
-
-    class Config:
-        from_attributes = True
-
-# --- SCHEMAS CHO AUDIO METRIC ---
-class AudioMetricResponse(BaseModel):
+class StegoMetrics(BaseModel):
+    """Các chỉ số chất lượng sau khi thực hiện Steganography"""
     mse: Optional[float] = None
     snr: Optional[float] = None
     psnr: Optional[float] = None
     capacity_bytes: Optional[int] = None
+    processing_time: Optional[float] = None # Thời gian xử lý (giây)
 
-    class Config:
-        from_attributes = True
+# --- SCHEMAS CHO RESPONSE API ---
 
-# --- SCHEMAS CHO TRANSACTION (Tổng hợp tất cả) ---
-class TransactionResponse(BaseModel):
-    transaction_id: int
-    action_type: str
-    payload_type: Optional[str] = None
-    status: str
-    timestamp: datetime
+class EncodeResponse(BaseModel):
+    """Kết quả trả về sau khi Encode thành công (nếu không dùng FileResponse trực tiếp)"""
+    status: str = "Success"
+    message: str
+    metrics: StegoMetrics
     
-    # Kiểu Dict cho JSONB (algo_params)
-    algo_params: Optional[Dict[str, Any]] = None 
-    
-    # Nhúng các thông tin liên quan (Relationships)
-    user: Optional[UserResponse] = None
-    algorithm: Optional[AlgorithmResponse] = None # Giả sử bạn đã có AlgorithmResponse
-    metrics: Optional[AudioMetricResponse] = None
-    
-    # Không cần lấy toàn bộ file, chỉ cần ID hoặc tên (Ở đây ta lấy ID cho nhẹ)
-    cover_file_id: Optional[int] = None
-    stego_file_id: Optional[int] = None
+class DecodeResponse(BaseModel):
+    """Kết quả trả về sau khi Decode thành công"""
+    status: str = "Success"
+    payload_type: str
+    hidden_data: str # Nội dung văn bản hoặc link tải tệp giải mã tạm thời
 
-    class Config:
-        from_attributes = True
+# --- SCHEMAS CHO LỊCH SỬ TRÌNH DUYỆT (LOCALSTORAGE) ---
+
+class LocalHistoryItem(BaseModel):
+    """Cấu trúc để Frontend lưu vào LocalStorage"""
+    file_name: str
+    algo_name: str
+    timestamp: str
+    action_type: str # 'Encode' hoặc 'Decode'
+    metrics: Optional[StegoMetrics] = None

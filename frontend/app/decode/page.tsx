@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { withAuth } from "../auth/withAuth";
+// import { withAuth } from "../auth/withAuth";
 
 interface Algorithm { algo_id: number; algo_name: string; }
 
@@ -214,8 +214,27 @@ function DecodePage() {
   const[dragOver,setDragOver]=useState(false);
   const[showCompare,setShowCompare]=useState(false);
   const resultRef=useRef<HTMLDivElement>(null);
+useEffect(() => {
+  fetch("http://localhost:8000/stego/config")
+    .then((r) => r.json())
+    .then((data) => {
+      if (data && data.algorithms) {
+        // 1. Lọc các thuật toán đang hoạt động
+        // 2. Sắp xếp giảm dần theo algo_id
+        const active = data.algorithms
+          .filter((a: any) => a.is_active)
+          .sort((a: any, b: any) => b.algo_id - a.algo_id);
 
-  useEffect(()=>{ fetch("http://localhost:8000/admin/algorithms").then(r=>r.json()).then(data=>{ const active=data.filter((a:any)=>a.is_active); setAlgorithms(active); if(active.length>0)setSelectedAlgoId(active[0].algo_id.toString()); }).catch(console.error); },[]);
+        setAlgorithms(active);
+
+        // Chọn thuật toán đầu tiên trong danh sách đã sắp xếp
+        if (active.length > 0) {
+          setSelectedAlgoId(active[0].algo_id.toString());
+        }
+      }
+    })
+    .catch(console.error);
+}, []);
 
   const selectedAlgo=algorithms.find(a=>String(a.algo_id)===String(selectedAlgoId));
   const safeAlgoName=selectedAlgo?.algo_name?.trim().toLowerCase().replace(/\s+/g,'')||"";
@@ -233,54 +252,93 @@ function logBug(action: string, error: any, context: Record<string, any> = {}): 
   console.info("Context Data:", context);
   console.groupEnd();
 }
-const handleDecode=async()=>{
-    if(!decodeFile)return;
-    if(requiresPassword&&!decodePassword)return setDecodeError("Thuật toán này yêu cầu mật khẩu!");
-    setLoading(true);setDecodeResult(null);setDecodeError("");
-    try{
-      const fd=new FormData();fd.append("algo_id",selectedAlgoId);fd.append("stego_audio",decodeFile);
-      if(requiresPassword&&decodePassword)fd.append("password",decodePassword);
-      const res=await fetch("http://localhost:8000/stego/decode",{method:"POST",body:fd});
-      const data=await res.json();
-      
-      if(res.ok&&data.status==="success"){
-        if(data.type==="text"||data.payload_type==="text"){
-          setDecodeResult({type:"text",text:data.content_text||data.data||data.text,filename:extractedFilename(decodeFile!.name, "text").replace(/\.[^.]+$/, ".txt")});
-          return;
-        }
-        
-        let rawData=data.data;
-        let b64Str=rawData || ""; 
-        
-        if(typeof rawData==="string"&&rawData.startsWith("data:")) b64Str=rawData.split(",")[1];
-        
-        let ext=data.ext||extFromMimeType(data.mime_type)||".bin";
-        let mimeType=data.mime_type||"application/octet-stream";
-        let uiType=data.type||data.payload_type||"file";
-        
-        // Kiểm tra an toàn trước khi dùng startsWith
-        if(typeof b64Str === "string") {
-          if((!data.mime_type||uiType==="file")&&b64Str.startsWith("/9j/")){ext=".jpg";mimeType="image/jpeg";uiType="image";}
-          else if((!data.mime_type||uiType==="file")&&b64Str.startsWith("iVBORw")){ext=".png";mimeType="image/png";uiType="image";}
-          else if((!data.mime_type||uiType==="file")&&b64Str.startsWith("Qk0")){ext=".bmp";mimeType="image/bmp";uiType="image";}
-          else if((!data.mime_type||uiType==="file")&&b64Str.startsWith("UklGR")){ext=".wav";mimeType="audio/wav";uiType="audio";}
-          else if((!data.mime_type||uiType==="file")&&b64Str.startsWith("UEsDB")){ext=".zip";mimeType="application/zip";uiType="file";}
-          else if((!data.mime_type||uiType==="file")&&b64Str.startsWith("JVBER")){ext=".pdf";mimeType="application/pdf";uiType="file";}
-        }
-        
-        const finalUrl=typeof rawData==="string"&&rawData.startsWith("data:")?rawData:`data:${mimeType};base64,${b64Str}`;
-        const resolvedFilename = data.filename || extractedFilename(decodeFile!.name, uiType).replace(/\.[^.]+$/, ext);
-        setDecodeResult({type:uiType==="binary"?"file":uiType,url:finalUrl,filename:resolvedFilename});
-      } else {
-        setDecodeError(data.message||data.detail||"Giải mã thất bại — sai mật khẩu hoặc không có dữ liệu ẩn.");
+const handleDecode = async () => {
+  if (!decodeFile) return;
+  
+  // Kiểm tra mật khẩu nếu thuật toán yêu cầu (Ví dụ: Random LSB)
+  if (requiresPassword && !decodePassword) {
+    return setDecodeError("Thuật toán này yêu cầu mật khẩu để giải mã!");
+  }
+
+  setLoading(true);
+  setDecodeResult(null);
+  setDecodeError("");
+
+  try {
+    const fd = new FormData();
+    fd.append("algo_id", selectedAlgoId);
+    fd.append("stego_audio", decodeFile);
+    if (decodePassword) fd.append("password", decodePassword);
+
+    const res = await fetch("http://localhost:8000/stego/decode", { 
+      method: "POST", 
+      body: fd 
+    });
+    
+    const data = await res.json();
+
+    if (res.ok && data.status === "success") {
+      let finalResult = null;
+
+      // 1. Xử lý nếu là Văn bản (Text)
+      if (data.payload_type === "text" || data.type === "text") {
+        finalResult = {
+          type: "text",
+          text: data.data || data.content_text,
+          filename: "decoded_message.txt"
+        };
+      } 
+      // 2. Xử lý nếu là Tệp tin (Binary/File)
+      else {
+        let b64Str = data.data || "";
+        // Loại bỏ prefix data: nếu backend trả về full data URI
+        if (b64Str.startsWith("data:")) b64Str = b64Str.split(",")[1];
+
+        let ext = ".bin";
+        let mimeType = "application/octet-stream";
+        let uiType = "file";
+
+        // Nhận diện định dạng dựa trên Magic Bytes (Base64)
+        if (b64Str.startsWith("/9j/")) { ext = ".jpg"; mimeType = "image/jpeg"; uiType = "image"; }
+        else if (b64Str.startsWith("iVBORw")) { ext = ".png"; mimeType = "image/png"; uiType = "image"; }
+        else if (b64Str.startsWith("UklGR")) { ext = ".wav"; mimeType = "audio/wav"; uiType = "audio"; }
+        else if (b64Str.startsWith("UEsDB")) { ext = ".zip"; mimeType = "application/zip"; uiType = "file"; }
+        else if (b64Str.startsWith("JVBER")) { ext = ".pdf"; mimeType = "application/pdf"; uiType = "file"; }
+
+        finalResult = {
+          type: uiType,
+          url: `data:${mimeType};base64,${b64Str}`,
+          filename: `extracted_file${ext}`
+        };
       }
+
+      setDecodeResult(finalResult);
+
+      // 3. LƯU LỊCH SỬ VÀO LOCALSTORAGE (Đúng chất Stateless)
+      const historyItem = {
+        id: Date.now(),
+        filename: decodeFile.name,
+        algo: data.algo_name || "Unknown",
+        type: "Decode",
+        status: "Thành công",
+        date: new Date().toISOString()
+      };
+      
+      const existingHistory = JSON.parse(localStorage.getItem("stego_history") || "[]");
+      existingHistory.unshift(historyItem);
+      localStorage.setItem("stego_history", JSON.stringify(existingHistory.slice(0, 20)));
+
+    } else {
+      setDecodeError(data.detail || data.message || "Giải mã thất bại. Vui lòng kiểm tra lại thuật toán hoặc mật khẩu.");
     }
-    catch(error: any){
-      logBug("DECODE", error, { selectedAlgoId, decodeFile });
-      setDecodeError("Lỗi hệ thống Frontend: " + (error.message || "Không thể kết nối máy chủ."));
-    }
-    finally{setLoading(false);}
-  };
+  } catch (error) {
+    setDecodeError("Lỗi kết nối: Không thể liên lạc với máy chủ xử lý.");
+    console.error("Decode Error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
   const handleDownload=()=>{if(!decodeResult?.url)return;const a=document.createElement("a");a.href=decodeResult.url;a.download=decodeResult.filename||"extracted_file";document.body.appendChild(a);a.click();document.body.removeChild(a);};
 
   return(
@@ -415,4 +473,5 @@ const handleDecode=async()=>{
   );
 }
 
-export default withAuth(DecodePage)
+// export default withAuth(DecodePage)
+export default DecodePage;
