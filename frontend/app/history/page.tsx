@@ -89,8 +89,8 @@ export default function HistoryPage() {
       {/* ─── CONTENT ─── */}
       {history.length === 0 ? (
         <div style={{ background: "var(--surface)", borderRadius: "10px", border: "1.5px dashed #ccc", padding: "60px 20px", textAlign: "center" }}>
-          <div style={{ fontSize: "3rem", color: "#eee", marginBottom: "16px" }}>🗄️</div>
-          <h3 style={{ margin: "0 0 8px 0", color: "var(--text)" }}>Chưa có hoạt động nào</h3>
+          {/* <div style={{ fontSize: "3rem", color: "#eee", marginBottom: "16px" }}>🗄️</div>
+          <h3 style={{ margin: "0 0 8px 0", color: "var(--text)" }}>Chưa có hoạt động nào</h3> */}
           <p style={{ margin: "0 0 24px 0", color: "var(--text-muted)", fontSize: "0.9rem" }}>Hệ thống chưa ghi nhận lần nhúng hoặc trích xuất nào trên trình duyệt này.</p>
           <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
             <Link href="/encode"><button style={{ padding: "10px 20px", borderRadius: "6px", background: "#000", color: "#fff", border: "none", fontWeight: 600, fontSize: "0.85rem" }}>Bắt đầu Nhúng</button></Link>

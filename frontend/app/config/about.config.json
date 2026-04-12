@@ -14,19 +14,19 @@
 
   "algorithms": [
     {
-      "tag": "Traditional", "tagColor": "#1a6b9a", "bg": "#e8f4fd",
-      "title": "LSB — Least Significant Bit",
+      "tag": "Miền thời gian", "tagColor": "#1a6b9a", "bg": "#e8f4fd",
+      "title": "LSB",
       "text": "Thay thế bit ít quan trọng nhất của các mẫu âm thanh bằng bit dữ liệu bí mật. Tốc độ cao, sức chứa lớn nhất trong các thuật toán.",
       "capacity": 90
     },
     {
-      "tag": "Spectral", "tagColor": "#1a6b3c", "bg": "#f0faf4",
+      "tag": "Miền tần số", "tagColor": "#1a6b3c", "bg": "#f0faf4",
       "title": "Phase Coding",
       "text": "Nhúng dữ liệu vào phổ pha của tín hiệu thay vì cường độ. Khó bị phát hiện bởi thính giác, chịu được một số phép biến đổi âm thanh.",
       "capacity": 65
     },
     {
-      "tag": "Secure", "tagColor": "#92600a", "bg": "#fff8e6",
+      "tag": "Miền thời gian", "tagColor": "#92600a", "bg": "#fff8e6",
       "title": "Random LSB — PRNG + Hash",
       "text": "Dùng mật khẩu để tạo bộ giả ngẫu nhiên PRNG, xáo trộn vị trí giấu tin. Không có mật khẩu đúng thì không thể trích xuất.",
       "capacity": 82

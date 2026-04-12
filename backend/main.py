@@ -13,17 +13,19 @@ EXPOSED_HEADERS = [
     "Metrics-K", 
     "Algo-Name"
 ]
-frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+import os
+
+# Hỗ trợ nhiều origin cùng lúc
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3001").split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[frontend_url], 
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=EXPOSED_HEADERS
 )
-
 
 @app.get("/")
 async def root():

@@ -1,16 +1,14 @@
-
-
 services:
   backend:
     build: ./backend
     ports:
       - "8000:8000"
     volumes:
-      - stego-data:/data        # giữ SQLite + uploads
+      - stego-data:/data
     environment:
       - DB_PATH=/data/stego.db
       - UPLOAD_DIR=/data/uploads
-      - FRONTEND_URL=http://stegovps-audio.southeastasia.cloudapp.azure.com:3000
+      - ALLOWED_ORIGINS=http://stegovps-audio.southeastasia.cloudapp.azure.com:3000
     restart: unless-stopped
 
   frontend:
@@ -25,4 +23,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  stego-data:        # volume persistent, không mất khi restart
+  stego-data:

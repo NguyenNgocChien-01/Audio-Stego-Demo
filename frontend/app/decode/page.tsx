@@ -215,7 +215,7 @@ function DecodePage() {
   const[showCompare,setShowCompare]=useState(false);
   const resultRef=useRef<HTMLDivElement>(null);
 useEffect(() => {
-  fetch("http://localhost:8000/stego/config")
+  fetch(`${process.env.NEXT_PUBLIC_API_URL}/stego/config`)
     .then((r) => r.json())
     .then((data) => {
       if (data && data.algorithms) {
@@ -252,10 +252,11 @@ function logBug(action: string, error: any, context: Record<string, any> = {}): 
   console.info("Context Data:", context);
   console.groupEnd();
 }
+// Trong hàm handleDecode của DecodePage
+
 const handleDecode = async () => {
   if (!decodeFile) return;
   
-  // Kiểm tra mật khẩu nếu thuật toán yêu cầu (Ví dụ: Random LSB)
   if (requiresPassword && !decodePassword) {
     return setDecodeError("Thuật toán này yêu cầu mật khẩu để giải mã!");
   }
@@ -268,57 +269,106 @@ const handleDecode = async () => {
     const fd = new FormData();
     fd.append("algo_id", selectedAlgoId);
     fd.append("stego_audio", decodeFile);
-    if (decodePassword) fd.append("password", decodePassword);
+    
+    // SỬA LỖI RANDOM LSB: Chắc chắn gửi mật khẩu nếu có
+    if (decodePassword) {
+       fd.append("password", decodePassword);
+    }
 
-    const res = await fetch("http://localhost:8000/stego/decode", { 
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stego/decode`, { 
       method: "POST", 
       body: fd 
     });
     
     const data = await res.json();
+    // // --- ĐOẠN DEBUG (THÊM VÀO) ---
+    // console.log("=== RAW DATA TỪ BACKEND ===");
+    // console.log("Status:", data.status);
+    // console.log("Type (từ API):", data.type);
+    // console.log("Payload Type (từ API):", data.payload_type);
+    // console.log("Content Text:", data.content_text ? "CÓ" : "KHÔNG");
+    // console.log("Data length/preview:", typeof data.data === 'string' ? data.data.substring(0, 20) + "..." : typeof data.data);
+    // // -----------------------------
+if (res.ok && data.status === "success") {
+      let rawType = data.payload_type || data.type || "";
+      let extractedData = data.data || data.content_text || data.text || "";
+      
+      const isBase64File = typeof extractedData === "string" && (
+          extractedData.startsWith("data:") || 
+          extractedData.startsWith("/9j/") || 
+          extractedData.startsWith("iVBORw") || 
+          extractedData.startsWith("UklGR") || 
+          extractedData.startsWith("UEsDB") || 
+          extractedData.startsWith("JVBER") ||
+          extractedData.startsWith("Qk0")
+      );
 
-    if (res.ok && data.status === "success") {
+      let isText = rawType === "text" || data.content_text !== undefined || 
+                   (typeof extractedData === "string" && extractedData.length > 0 && !isBase64File && rawType !== "binary" && rawType !== "file");
+
       let finalResult = null;
 
-      // 1. Xử lý nếu là Văn bản (Text)
-      if (data.payload_type === "text" || data.type === "text") {
+      if (isText) {
         finalResult = {
           type: "text",
-          text: data.data || data.content_text,
-          filename: "decoded_message.txt"
+          text: extractedData,
+          filename: extractedFilename(decodeFile.name, "text").replace(/\.[^.]+$/, ".txt")
         };
-      } 
-      // 2. Xử lý nếu là Tệp tin (Binary/File)
-      else {
-        let b64Str = data.data || "";
-        // Loại bỏ prefix data: nếu backend trả về full data URI
-        if (b64Str.startsWith("data:")) b64Str = b64Str.split(",")[1];
+      } else {
+        let b64Str = extractedData;
+        if (typeof b64Str === "string" && b64Str.startsWith("data:")) {
+          b64Str = b64Str.split(",")[1];
+        }
 
-        let ext = ".bin";
-        let mimeType = "application/octet-stream";
-        let uiType = "file";
+        let ext = data.ext || extFromMimeType(data.mime_type) || ".bin";
+        let mimeType = data.mime_type || "application/octet-stream";
+        let uiType = rawType === "binary" ? "file" : (rawType || "file");
 
-        // Nhận diện định dạng dựa trên Magic Bytes (Base64)
-        if (b64Str.startsWith("/9j/")) { ext = ".jpg"; mimeType = "image/jpeg"; uiType = "image"; }
-        else if (b64Str.startsWith("iVBORw")) { ext = ".png"; mimeType = "image/png"; uiType = "image"; }
-        else if (b64Str.startsWith("UklGR")) { ext = ".wav"; mimeType = "audio/wav"; uiType = "audio"; }
-        else if (b64Str.startsWith("UEsDB")) { ext = ".zip"; mimeType = "application/zip"; uiType = "file"; }
-        else if (b64Str.startsWith("JVBER")) { ext = ".pdf"; mimeType = "application/pdf"; uiType = "file"; }
+        if (typeof b64Str === "string") {
+          if ((!data.mime_type || uiType === "file") && b64Str.startsWith("/9j/")) { ext = ".jpg"; mimeType = "image/jpeg"; uiType = "image"; }
+          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("iVBORw")) { ext = ".png"; mimeType = "image/png"; uiType = "image"; }
+          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("Qk0")) { ext = ".bmp"; mimeType = "image/bmp"; uiType = "image"; }
+          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("UklGR")) { ext = ".wav"; mimeType = "audio/wav"; uiType = "audio"; }
+          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("UEsDB")) { ext = ".zip"; mimeType = "application/zip"; uiType = "file"; }
+          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("JVBER")) { ext = ".pdf"; mimeType = "application/pdf"; uiType = "file"; }
+        }
 
-        finalResult = {
-          type: uiType,
-          url: `data:${mimeType};base64,${b64Str}`,
-          filename: `extracted_file${ext}`
-        };
+        // --- TÍNH NĂNG SMART TEXT DETECTOR (SỬA LỖI .BIN) ---
+        let isForcedText = false;
+        if (ext === ".bin" && typeof b64Str === "string") {
+            try {
+                // Cố gắng giải mã ngược chuỗi Base64 sang chuỗi UTF-8 tiếng Việt
+                const decodedText = decodeURIComponent(escape(window.atob(b64Str)));
+                
+                // Nếu thành công và không bị lỗi, chứng tỏ 100% đây là Text bị Backend hiểu nhầm
+                finalResult = {
+                    type: "text",
+                    text: decodedText,
+                    filename: extractedFilename(decodeFile.name, "text").replace(/\.[^.]+$/, ".txt")
+                };
+                isForcedText = true;
+            } catch (e) {
+                // Bị lỗi giải mã (Nghĩa là nó là file dữ liệu nhị phân thật sự, kệ nó)
+            }
+        }
+        // ----------------------------------------------------
+
+        // Nếu không bị ép thành Text, thì xuất ra File như bình thường
+        if (!isForcedText) {
+            finalResult = {
+              type: uiType,
+              url: `data:${mimeType};base64,${b64Str}`,
+              filename: data.filename || extractedFilename(decodeFile.name, uiType).replace(/\.[^.]+$/, ext)
+            };
+        }
       }
 
       setDecodeResult(finalResult);
 
-      // 3. LƯU LỊCH SỬ VÀO LOCALSTORAGE (Đúng chất Stateless)
       const historyItem = {
         id: Date.now(),
         filename: decodeFile.name,
-        algo: data.algo_name || "Unknown",
+        algo: data.algo_name || selectedAlgo?.algo_name || "Unknown",
         type: "Decode",
         status: "Thành công",
         date: new Date().toISOString()
@@ -327,6 +377,7 @@ const handleDecode = async () => {
       const existingHistory = JSON.parse(localStorage.getItem("stego_history") || "[]");
       existingHistory.unshift(historyItem);
       localStorage.setItem("stego_history", JSON.stringify(existingHistory.slice(0, 20)));
+    
 
     } else {
       setDecodeError(data.detail || data.message || "Giải mã thất bại. Vui lòng kiểm tra lại thuật toán hoặc mật khẩu.");

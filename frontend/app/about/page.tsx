@@ -239,7 +239,7 @@ export default function AboutPage() {
                 <p style={{ fontSize: "0.86rem", color: "var(--text-muted)", margin: 0, lineHeight: 1.7 }}>
                   {algo.text}
                 </p>
-                <CapBar value={algo.capacity} delay={i * 80 + 150} />
+                {/* <CapBar value={algo.capacity} delay={i * 80 + 150} /> */}
               </div>
             </Reveal>
           ))}

@@ -324,27 +324,27 @@ function EncodePage() {
   const[secretMicFile,setSecretMicFile]=useState<File|null>(null);
   const[result,setResult]=useState<{url:string;filename:string;metrics:{mse:number;psnr:number;snr:number};k:number;algo_name?:string}|null>(null);
   const resultRef=useRef<HTMLDivElement>(null);
-useEffect(() => {
-  fetch("http://localhost:8000/stego/config")
-    .then((r) => r.json())
-    .then((data) => {
-      if (data && data.algorithms) {
-        // 1. Lọc các thuật toán đang hoạt động
-        // 2. Sắp xếp giảm dần theo algo_id
-        const active = data.algorithms
-          .filter((a: any) => a.is_active)
-          .sort((a: any, b: any) => b.algo_id - a.algo_id);
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/stego/config`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && data.algorithms) {
+          // 1. Lọc các thuật toán đang hoạt động
+          // 2. Sắp xếp giảm dần theo algo_id
+          const active = data.algorithms
+            .filter((a: any) => a.is_active)
+            .sort((a: any, b: any) => b.algo_id - a.algo_id);
 
-        setAlgorithms(active);
+          setAlgorithms(active);
 
-        // Chọn thuật toán đầu tiên trong danh sách đã sắp xếp
-        if (active.length > 0) {
-          setSelectedAlgoId(active[0].algo_id.toString());
+          // Chọn thuật toán đầu tiên trong danh sách đã sắp xếp
+          if (active.length > 0) {
+            setSelectedAlgoId(active[0].algo_id.toString());
+          }
         }
-      }
-    })
-    .catch(console.error);
-}, []);
+      })
+      .catch(console.error);
+  }, []);
 
   const selectedAlgo=algorithms.find(a=>String(a.algo_id)===String(selectedAlgoId));
   const safeAlgoName=selectedAlgo?.algo_name?.trim().toLowerCase().replace(/\s+/g,'')||"";
@@ -367,6 +367,7 @@ useEffect(() => {
       ?(secretInputMode==="mic"?!!secretMicFile:!!payloadFile)
       :!!payloadFile
   )&&(!algoRequiresPassword||!!encodePassword);
+// Trong hàm handleEncode của EncodePage
 
 const handleEncode = async () => {
   if (!encodeReady) return;
@@ -378,8 +379,13 @@ const handleEncode = async () => {
     fd.append("algo_id", selectedAlgoId);
     fd.append("audio", encodeFile!);
 
+    // Đảm bảo mật khẩu được gửi đi nếu thuật toán yêu cầu
     if (algoRequiresPassword && encodePassword) {
       fd.append("password", encodePassword);
+    } else if (algoRequiresPassword && !encodePassword) {
+       alert("Thuật toán này bắt buộc phải có mật khẩu!");
+       setLoading(false);
+       return;
     }
 
     if (payloadType === "text") {
@@ -393,14 +399,12 @@ const handleEncode = async () => {
       fd.append("secret_file", payloadFile);
     }
 
-    // CHỈ GỌI FETCH 1 LẦN DUY NHẤT
-    const res = await fetch("http://localhost:8000/stego/encode", { 
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stego/encode`, { 
       method: "POST", 
       body: fd 
     });
 
     if (res.ok) {
-      // 1. Kiểm tra xem có phải JSON lỗi không (đề phòng backend trả về 200 nhưng lỗi)
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
         const errData = await res.json();
@@ -408,19 +412,17 @@ const handleEncode = async () => {
         return;
       }
 
-      // 2. Đọc tệp tin (Blob)
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
       const fname = stegoFilename(encodeFile!.name, payloadType);
 
-      // 3. Trích xuất chỉ số từ HEADERS (Dùng đúng tên đã bỏ X-)
-      const h_mse = res.headers.get("Metrics-MSE");
-      const h_psnr = res.headers.get("Metrics-PSNR");
-      const h_snr = res.headers.get("Metrics-SNR");
-      const h_k = res.headers.get("Metrics-K");
-      const h_algo = res.headers.get("Algo-Name");
+      // Đọc headers (Đảm bảo backend có expose_headers các trường này)
+      const h_mse = res.headers.get("Metrics-MSE") || res.headers.get("X-MSE") || res.headers.get("mse");
+      const h_psnr = res.headers.get("Metrics-PSNR") || res.headers.get("X-PSNR") || res.headers.get("psnr");
+      const h_snr = res.headers.get("Metrics-SNR") || res.headers.get("X-SNR") || res.headers.get("snr");
+      const h_k = res.headers.get("Metrics-K") || res.headers.get("X-K") || res.headers.get("k");
+      const h_algo = res.headers.get("Algo-Name") || res.headers.get("X-Algo-Name");
 
-      // Chuyển đổi dữ liệu để hiển thị
       const metrics = {
         mse: h_mse ? parseFloat(h_mse) : 0,
         psnr: h_psnr ? parseFloat(h_psnr) : 0,
@@ -429,7 +431,6 @@ const handleEncode = async () => {
       const k_val = h_k ? parseInt(h_k) : 0;
       const algo_name = h_algo || selectedAlgo?.algo_name || "Unknown";
 
-      // 4. Cập nhật State kết quả
       const newResult = {
         url: blobUrl,
         filename: fname,
@@ -439,13 +440,13 @@ const handleEncode = async () => {
       };
       setResult(newResult);
 
-      // 5. Lưu lịch sử vào LocalStorage (Lưu cả metrics để xem lại)
       const historyItem = {
         id: Date.now(),
+        action: "Encode", // Đánh dấu rõ là Encode cho History Page
         filename: fname,
         algo: algo_name,
         type: payloadType,
-        metrics: metrics, // Lưu thêm cái này để trang History có dữ liệu
+        metrics: metrics,
         k: k_val,
         date: new Date().toISOString()
       };
@@ -454,7 +455,6 @@ const handleEncode = async () => {
       localStorage.setItem("stego_history", JSON.stringify(existingHistory.slice(0, 20)));
 
     } else {
-      // Xử lý lỗi HTTP
       let errMsg = "Không thể xử lý";
       try {
         const errData = await res.json();
