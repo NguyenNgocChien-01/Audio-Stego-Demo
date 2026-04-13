@@ -1,0 +1,72 @@
+{
+  "hero": {
+    "badge": "Khóa luận tốt nghiệp 2026",
+    "title_line1": ["Bảo", "vệ", "thông", "điệp", "bằng"],
+    "title_line2": ["Âm", "thanh", "vô", "hình"],
+    "subtitle": "Hệ thống giấu tin đa phương tiện (Steganography) giúp bạn nhúng các tệp tin bí mật vào những bản nhạc bình thường mà không ai có thể nghe hay nhận ra bằng mắt thường."
+  },
+
+  "stats": [
+    { "value": 3,   "suffix": "+",     "label": "Thuật toán", "sub": "LSB · Phase · RandomLSB " },
+    { "value": 4,   "suffix": " loại", "label": "Payload",    "sub": "Text · Ảnh · Audio · ZIP" },
+    { "value": 100, "suffix": "%",     "label": "Stateless",  "sub": "Không lưu dữ liệu người dùng" }
+  ],
+
+  "algorithms": [
+    {
+      "tag": "Miền thời gian", "tagColor": "#1a6b9a", "bg": "#e8f4fd",
+      "title": "LSB",
+      "text": "Thay thế bit ít quan trọng nhất của các mẫu âm thanh bằng bit dữ liệu bí mật. Tốc độ cao, sức chứa lớn nhất trong các thuật toán.",
+      "capacity": 90
+    },
+    {
+      "tag": "Miền tần số", "tagColor": "#1a6b3c", "bg": "#f0faf4",
+      "title": "Phase Coding",
+      "text": "Nhúng dữ liệu vào phổ pha của tín hiệu thay vì cường độ. Khó bị phát hiện bởi thính giác, chịu được một số phép biến đổi âm thanh.",
+      "capacity": 65
+    },
+    {
+      "tag": "Miền thời gian", "tagColor": "#92600a", "bg": "#fff8e6",
+      "title": "Random LSB — PRNG + Hash",
+      "text": "Dùng mật khẩu để tạo bộ giả ngẫu nhiên PRNG, xáo trộn vị trí giấu tin. Không có mật khẩu đúng thì không thể trích xuất.",
+      "capacity": 82
+    }
+  ],
+
+  "demo": {
+    "title": "Sơ đồ luồng hoạt động",
+    "encode": {
+      "label": "Mã hóa — Encode",
+      "steps": [
+        { "id": "A", "text": "File âm thanh gốc (.wav)" },
+        { "id": "B", "text": "Dữ liệu bí mật (text / file)" },
+        { "id": "C", "text": "Chọn thuật toán + mật khẩu" },
+        { "id": "D", "text": "Engine xử lý Steganography" },
+        { "id": "E", "text": "File âm thanh Stego (.wav)" }
+      ]
+    },
+    "decode": {
+      "label": "Giải mã — Decode",
+      "steps": [
+        { "id": "A", "text": "File âm thanh Stego (.wav)" },
+        { "id": "B", "text": "Nhập thuật toán + mật khẩu" },
+        { "id": "C", "text": "Engine giải mã" },
+        { "id": "D", "text": "Dữ liệu bí mật được phục hồi" }
+      ]
+    }
+  },
+
+  "author": {
+    "name": "Nguyễn Ngọc Chiến",
+    "initial": "N",
+    "university": "Đại học Cần Thơ",
+    "major": "Hệ thống thông tin",
+    "course": "Khóa 2022 – 2026",
+    "student_id": "B2203431",
+    "links": [
+      { "label": "GitHub", "href": "https://github.com/NguyenNgocChien-01" },
+      { "label": "Email",  "href": "mailto:ngocchiien23l@gmail.com" },
+      { "label": "Portfolio",  "href": "http://localhost:3000/info" }
+    ]
+  }
+}

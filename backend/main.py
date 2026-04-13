@@ -1,49 +1,34 @@
 from fastapi import FastAPI
-from app.routers import stego, auth
+from app.routers import stego
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
-from app.db.database import Base, engine
-import app.db.models
-from app.routers import admin, users, transactions
 
-Base.metadata.create_all(bind=engine)  
 app = FastAPI(title="Stego App")
 
-# Cấu hình CORS
+EXPOSED_HEADERS = [
+    "Metrics-MSE", 
+    "Metrics-PSNR", 
+    "Metrics-SNR", 
+    "Metrics-K", 
+    "Algo-Name"
+]
+import os
+
+# Hỗ trợ nhiều origin cùng lúc
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"], 
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=EXPOSED_HEADERS
 )
-
-
-import os
-
-# Dùng os.getcwd() để lấy luôn thư mục gốc của project
-UPLOAD_DIR = os.path.join(os.getcwd(), "uploads")
-
-if not os.path.exists(UPLOAD_DIR):
-    os.makedirs(UPLOAD_DIR)
-    os.makedirs(os.path.join(UPLOAD_DIR, "stego"), exist_ok=True)
-
-app.mount("/static", StaticFiles(directory=UPLOAD_DIR), name="static")
-if not os.path.exists(UPLOAD_DIR):
-    os.makedirs(UPLOAD_DIR)
-    os.makedirs(os.path.join(UPLOAD_DIR, "stego"), exist_ok=True)
-
-# Khai báo cho phép tải file
-app.mount("/static", StaticFiles(directory=UPLOAD_DIR), name="static")
-
 
 @app.get("/")
 async def root():
     return {"message": "Welcome to Stego App!"}
 
 app.include_router(stego.router)
-app.include_router(admin.router)
-app.include_router(users.router)
-app.include_router(auth.router)
-app.include_router(transactions.router)

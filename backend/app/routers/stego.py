@@ -2,259 +2,177 @@ import os
 import uuid
 import shutil
 import base64
-import math 
+import math
+import tempfile
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
-from app.db.database import get_db
-from app.db.models import StegoTransaction, AudioMetric, Algorithm
-from app.src.traditional import randomlsb 
-# from app.src.dl_model import wrapper
-from app.src.traditional import lsb, phase
+from app.config import ALGORITHMS, PAYLOADS
+from app.src.traditional import randomlsb, lsb, phase
 
 router = APIRouter(
     prefix="/stego",
     tags=["Steganography Operations"]
 )
 
-UPLOAD_ROOT = os.path.join(os.getcwd(), "uploads")
-STEGO_OUTPUT_DIR = os.path.join(UPLOAD_ROOT, "stego")
-os.makedirs(STEGO_OUTPUT_DIR, exist_ok=True)
 
 def get_vn_timestamp():
     vn_tz = timezone(timedelta(hours=7))
     return datetime.now(vn_tz).strftime("%Y%m%d_%H%M%S")
 
-# =========================================
-# HÀM XỬ LÝ LỖI SỐ THỰC (-inf, NaN) CHO JSON
-# =========================================
 def sanitize_float(value):
-    if value is None:
-        return None
-    # Nếu là Infinity, -Infinity hoặc NaN, ép về 0.0 để JSON không bị sập
-    if math.isinf(value) or math.isnan(value):
+    if value is None or math.isinf(value) or math.isnan(value):
         return 0.0  
     return round(value, 2)
 
+def get_algo_from_list(algo_id: int):
+
+
+    algo = next((a for a in ALGORITHMS if a["algo_id"] == algo_id), None)
+
+    if not algo or not algo["is_active"]:
+
+        raise HTTPException(status_code=400, detail="Thuật toán không tồn tại hoặc bị khóa.")
+
+    return algo
+@router.get("/config")
+async def get_config():
+    return {
+        "algorithms": ALGORITHMS,
+        "payload_types": PAYLOADS
+    }
+
 @router.post("/encode")
 async def api_encode(
+    background_tasks: BackgroundTasks,
     algo_id: int = Form(...),
     audio: UploadFile = File(...),
     secret_text: str = Form(None),
     secret_file: UploadFile = File(None),
-    password: str = Form(None),
-    db: Session = Depends(get_db) 
+    password: str = Form(None)
 ):
     if not secret_text and not secret_file:
-        raise HTTPException(status_code=400, detail="Cần cung cấp văn bản hoặc tệp tin để giấu.")
+        raise HTTPException(status_code=400, detail="Cần cung cấp dữ liệu bí mật.")
 
-    algo_db = db.query(Algorithm).filter(Algorithm.algo_id == algo_id).first()
-    if not algo_db or not algo_db.is_active:
-        raise HTTPException(status_code=400, detail="Thuật toán không tồn tại hoặc đã bị khóa.")
+    algo = get_algo_from_list(algo_id)
+    normalized_name = algo["algo_name"].strip().lower()
 
-    normalized_name = algo_db.algo_name.strip().lower() 
-
-    timestamp = get_vn_timestamp()
+    # Tạo tệp tạm thời cho đầu vào và đầu ra
+    temp_dir = tempfile.gettempdir()
     unique_id = str(uuid.uuid4())[:8]
     
-    temp_audio_path = os.path.join(UPLOAD_ROOT, f"temp_{unique_id}_{audio.filename}")
-    output_audio_name = f"stego_{timestamp}_{unique_id}.wav"
-    output_audio_path = os.path.join(STEGO_OUTPUT_DIR, output_audio_name)
-    
-    temp_secret_path = None
+    input_path = os.path.join(temp_dir, f"in_{unique_id}_{audio.filename}")
+    output_path = os.path.join(temp_dir, f"stego_{unique_id}.wav")
+    sec_path = None
+
     try:
-        with open(temp_audio_path, "wb") as buffer:
-            shutil.copyfileobj(audio.file, buffer)
+        # Lưu cover audio vào RAM/Disk tạm
+        with open(input_path, "wb") as f:
+            shutil.copyfileobj(audio.file, f)
 
         if secret_file:
-            temp_secret_path = os.path.join(UPLOAD_ROOT, f"temp_sec_{unique_id}_{secret_file.filename}")
-            with open(temp_secret_path, "wb") as buffer:
-                shutil.copyfileobj(secret_file.file, buffer)
-            secret_input = temp_secret_path
-            payload_type = "file"
+            sec_path = os.path.join(temp_dir, f"sec_{unique_id}_{secret_file.filename}")
+            with open(sec_path, "wb") as f:
+                shutil.copyfileobj(secret_file.file, f)
+            secret_input = sec_path
         else:
             secret_input = secret_text
-            payload_type = "text"
-        print(f" Password nhận được: {password}")
-        
-        if normalized_name == 'lsb':
-            print("Nhúng bằng LSB")
-            result = lsb.encode(temp_audio_path, secret_input, output_audio_path)
-        elif normalized_name == 'randomlsb' or normalized_name == 'random lsb':
-            print("Nhúng bằng Random LSB")
-            result = randomlsb.encode(temp_audio_path, secret_input, output_audio_path, password)
-        elif normalized_name == 'phase coding' or normalized_name == 'phase':
-            print("Nhúng bằng Phase Coding")
-            result = phase.encode(temp_audio_path, secret_input, output_audio_path)
-        else:
-            # Nếu KHÔNG PHẢI thuật toán cổ điển -> MẶC ĐỊNH ĐẨY XUỐNG AI XỬ LÝ
-            # result = wrapper.encode(
-            #     cover_path=temp_audio_path, 
-            #     secret_input=secret_input, 
-            #     output_path=output_audio_path, 
-            #     algo_name=normalized_name
-            # )
-            print("Xuat Hien Loi")
 
-        if os.path.exists(temp_audio_path): os.remove(temp_audio_path)
-        if temp_secret_path and os.path.exists(temp_secret_path): os.remove(temp_secret_path)
+        # Điều hướng thuật toán
+        if normalized_name == 'lsb':
+            result = lsb.encode(input_path, secret_input, output_path)
+        elif normalized_name in ['randomlsb', 'random lsb']:
+            result = randomlsb.encode(input_path, secret_input, output_path, password)
+        elif normalized_name in ['phase coding', 'phase']:
+            result = phase.encode(input_path, secret_input, output_path)
+        else:
+            raise HTTPException(status_code=400, detail="Thuật toán không được hỗ trợ.")
 
         if result['status'] == 'error':
             raise HTTPException(status_code=400, detail=result['message'])
 
-        # LƯU LỊCH SỬ VÀO DATABASE
-        new_transaction = StegoTransaction(
-            action_type="Encode", payload_type=payload_type, algo_id=algo_id,
-            algo_params={"k": result.get('k')}, status="Success"
-        )
-        db.add(new_transaction)
-        db.commit()
-        db.refresh(new_transaction) 
+        # Thiết lập xóa toàn bộ file sau khi gửi trả kết quả
+        background_tasks.add_task(os.remove, input_path)
+        background_tasks.add_task(os.remove, output_path)
+        if sec_path: background_tasks.add_task(os.remove, sec_path)
 
-        new_metric = AudioMetric(
-            transaction_id=new_transaction.transaction_id,
-            mse=result.get('mse'), psnr=result.get('psnr'),
-            snr=result.get('snr'), capacity_bytes=result.get('capacity')
-        )
-        db.add(new_metric)
-        db.commit()
+        k_value = result.get('k') or result.get('capacity') or 0
 
-        # 🚀 ĐÃ FIX LỖI JSON TẠI ĐÂY: Sử dụng hàm sanitize_float để làm sạch dữ liệu
-        return {
-            "status": "success",
-            "algo_name": algo_db.algo_name,
-            "k_used": result.get('k'),
-            "metrics": {
-                "mse": sanitize_float(result.get('mse')), 
-                "psnr": sanitize_float(result.get('psnr')), 
-                "snr": sanitize_float(result.get('snr'))
-            },
-            "download_url": f"/static/stego/{output_audio_name}"
+        headers = {
+            "Metrics-MSE": str(sanitize_float(result.get('mse'))),
+            "Metrics-PSNR": str(sanitize_float(result.get('psnr'))),
+            "Metrics-SNR": str(sanitize_float(result.get('snr'))),
+            "Metrics-K": str(k_value), # Thêm dòng này
+            "Algo-Name": algo["algo_name"],
+            "Access-Control-Expose-Headers": "Metrics-MSE, Metrics-PSNR, Metrics-SNR, Metrics-K, Algo-Name"
         }
 
-    except HTTPException:
-        if os.path.exists(temp_audio_path): os.remove(temp_audio_path)
-        if temp_secret_path and os.path.exists(temp_secret_path): os.remove(temp_secret_path)
-        raise
-    except Exception as e:
-        if os.path.exists(temp_audio_path): os.remove(temp_audio_path)
-        if temp_secret_path and os.path.exists(temp_secret_path): os.remove(temp_secret_path)
-        raise HTTPException(status_code=500, detail=str(e))
+        return FileResponse(
+            path=output_path,
+            filename=f"stego_{audio.filename}",
+            media_type="audio/wav",
+            headers=headers
+        )
 
+    except Exception as e:
+        if os.path.exists(input_path): os.remove(input_path)
+        if sec_path and os.path.exists(sec_path): os.remove(sec_path)
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/decode")
 async def api_decode(
+    background_tasks: BackgroundTasks,
     algo_id: int = Form(...),
     stego_audio: UploadFile = File(...),
-    password: str = Form(None),
-    db: Session = Depends(get_db) 
+    password: str = Form(None)
 ):
-    algo_db = db.query(Algorithm).filter(Algorithm.algo_id == algo_id).first()
-    if not algo_db or not algo_db.is_active:
-        raise HTTPException(status_code=400, detail="Thuật toán không hợp lệ.")
-    
-    print(f" Password nhận được: {password}")
-    normalized_name = algo_db.algo_name.strip().lower() 
+    algo = get_algo_from_list(algo_id)
+    normalized_name = algo["algo_name"].strip().lower()
+
+    temp_dir = tempfile.gettempdir()
     unique_id = str(uuid.uuid4())[:8]
-    temp_decode_path = os.path.join(UPLOAD_ROOT, f"temp_dec_{unique_id}.wav")
+    decode_path = os.path.join(temp_dir, f"dec_{unique_id}.wav")
 
     try:
-        with open(temp_decode_path, "wb") as buffer:
-            shutil.copyfileobj(stego_audio.file, buffer)
+        with open(decode_path, "wb") as f:
+            shutil.copyfileobj(stego_audio.file, f)
 
-        #  ĐỊNH TUYẾN THÔNG MINH CHO DECODE
         if normalized_name == 'lsb':
-            print("Giải mã bằng LSB")
-            result = lsb.decode(temp_decode_path)
-        elif normalized_name == 'randomlsb' or normalized_name == 'random lsb':
-            print("Giải mã bằng Random LSB")
-            result = randomlsb.decode(temp_decode_path, password)
-        elif normalized_name == 'phase coding' or normalized_name == 'phase':
-            print("Giải mã bằng Phase Coding")
-            result = phase.decode(temp_decode_path)
+            result = lsb.decode(decode_path)
+        elif normalized_name in ['randomlsb', 'random lsb']:
+            result = randomlsb.decode(decode_path, password)
+        elif normalized_name in ['phase coding', 'phase']:
+            result = phase.decode(decode_path)
         else:
-            # # MẶC ĐỊNH LÀ MÔ HÌNH AI
-            # result = wrapper.decode(
-            #     stego_path=temp_decode_path, 
-            #     output_folder=STEGO_OUTPUT_DIR, 
-            #     algo_name=normalized_name
-            # )
-            print("Xuat Hien Loi")
+            raise HTTPException(status_code=400, detail="Thuật toán không được hỗ trợ.")
 
-        if os.path.exists(temp_decode_path): os.remove(temp_decode_path)
+        # Xóa file sau khi giải mã xong
+        background_tasks.add_task(os.remove, decode_path)
 
         if result['status'] == 'error':
-            db.add(StegoTransaction(action_type="Decode", algo_id=algo_id, status="Failed"))
-            db.commit()
             raise HTTPException(status_code=400, detail=result['message'])
 
-        payload_type_value = result.get('payload_type')
-        if not payload_type_value:
-            payload_type_value = "text" if 'content_text' in result or 'data' in result else "file"
-
-        success_transaction = StegoTransaction(
-            action_type="Decode",
-            payload_type=payload_type_value,
-            algo_id=algo_id,
-            status="Success",
-            algo_params={"k_detected": result.get('k_detected')}
-        )
-        db.add(success_transaction)
-        db.commit()
-
-# CHUẨN HÓA KẾT QUẢ TRẢ VỀ
+        # Xử lý dữ liệu trả về (Text hoặc Base64 cho file)
+        response_data = {"status": "success", "algo_name": algo["algo_name"]}
+        
         if 'content_text' in result:
-            return {"status": "success", "payload_type": "text", "data": result['content_text']}
-            
+            response_data.update({"payload_type": "text", "data": result['content_text']})
         elif 'data' in result:
             raw_data = result['data']
-            
-            # 1. Nếu data đã là chuỗi (str) - do thuật toán RandomLSB trả về Base64
-            if isinstance(raw_data, str):
-                return {
-                    "status": "success", 
-                    "k_detected": result.get('k_detected'), 
-                    "payload_type": result.get('type', 'file'), # Ưu tiên type do thuật toán trả về, nếu không có thì mặc định là file
-                    "data": raw_data
-                }
-                
-            # 2. Nếu data là bytes thuần (do thuật toán LSB/Phase cũ trả về)
-            elif isinstance(raw_data, bytes):
+            if isinstance(raw_data, bytes):
                 try:
-                    # Cố gắng giải mã thành văn bản
-                    return {
-                        "status": "success", 
-                        "k_detected": result.get('k_detected'), 
-                        "payload_type": "text", 
-                        "data": raw_data.decode('utf-8')
-                    }
+                    response_data.update({"payload_type": "text", "data": raw_data.decode('utf-8')})
                 except UnicodeDecodeError:
-                    # Nếu là file nhị phân (hình ảnh, zip...), chuyển sang Base64
-                    encoded_str = base64.b64encode(raw_data).decode('utf-8')
-                    return {
-                        "status": "success", 
-                        "k_detected": result.get('k_detected'), 
+                    response_data.update({
                         "payload_type": "file", 
-                        "data": encoded_str, 
-                        "message": "Binary data detected"
-                    }
+                        "data": base64.b64encode(raw_data).decode('utf-8'),
+                        "message": "Dữ liệu nhị phân (Binary)"
+                    })
+            else:
+                response_data.update({"payload_type": "file", "data": raw_data})
         
-        # ĐÃ SỬA: Chuyển ảnh AI thành Base64 thay vì FileResponse
-        elif 'save_path' in result:
-             with open(result['save_path'], "rb") as f:
-                 file_data = f.read()
-             encoded_string = base64.b64encode(file_data).decode('utf-8')
-             
-             return {
-                 "status": "success",
-                 "payload_type": "file",
-                 "data": encoded_string,
-                 "message": "Dữ liệu nhị phân được trích xuất thành công!"
-             }
-    except HTTPException:
-        if os.path.exists(temp_decode_path): os.remove(temp_decode_path)
-        raise
+        return response_data
+
     except Exception as e:
-        if os.path.exists(temp_decode_path): os.remove(temp_decode_path)
+        if os.path.exists(decode_path): os.remove(decode_path)
         raise HTTPException(status_code=500, detail=str(e))
