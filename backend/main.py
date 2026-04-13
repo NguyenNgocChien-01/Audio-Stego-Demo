@@ -16,7 +16,7 @@ EXPOSED_HEADERS = [
 import os
 
 # Hỗ trợ nhiều origin cùng lúc
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3001").split(",")
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 
 app.add_middleware(
     CORSMiddleware,
