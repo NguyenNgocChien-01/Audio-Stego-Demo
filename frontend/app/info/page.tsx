@@ -12,6 +12,7 @@ const DATA = {
     dienThoai: "0399 428 511",
     github: "NguyenNgocChien-01",
     linkedin: "linkedin.com/in/nguyenngocchien",
+    facebook: "https://www.facebook.com/chiienn02/",
     diaChi: "Ninh Kiều, Cần Thơ",
     gioiThieu:
       "Sinh viên năm cuối ngành Hệ thống Thông tin tại Trường Đại học Cần Thơ với nền tảng kỹ thuật vững chắc. Có kinh nghiệm làm việc với cơ sở dữ liệu, phát triển ứng dụng web (Back-end) và tích hợp các mô hình Trí tuệ Nhân tạo vào hệ thống thực tế. Khả năng học hỏi nhanh, thích ứng tốt với nhiều vai trò từ Lập trình viên, Kỹ sư Dữ liệu đến Phân tích Nghiệp vụ.",
@@ -41,7 +42,7 @@ const DATA = {
     ],
     duAn: [
       {
-        ten: "Nghiên cứu Kỹ thuật Giấu tin trong Âm thanh",
+        ten: "Nghiên cứu Kỹ thuật Giấu tin trong Âm thanh (nnchien.id.vn)",
         thoiGian: "Tháng 9/2025 – Tháng 4/2026",
         vaiTro: "Khóa luận tốt nghiệp",
         stack: ["Python", "FastAPI", "TensorFlow", "Next.js", "Docker"],
@@ -100,6 +101,7 @@ const DATA = {
     dienThoai: "0399 428 511",
     github: "NguyenNgocChien-01",
     linkedin: "linkedin.com/in/nguyenngocchien",
+    facebook: "https://www.facebook.com/chiienn02/",
     diaChi: "Ninh Kieu, Can Tho",
     gioiThieu:
       "Final-year Information Systems student at Can Tho University with a solid technical foundation. Experienced in working with databases, developing web applications (Back-end), and integrating Artificial Intelligence models into real-world systems. Fast learner, highly adaptable to various roles from Software Developer, Data Engineer to Business Analyst.",
@@ -358,7 +360,18 @@ function ProjectCard({ p, open, onToggle, accent, delay, th, labelTexts }: any) 
             <ul style={{ paddingLeft: 18, color: th.textSec, fontSize: 14, lineHeight: 1.7 }}>
               {p.moTa.map((m: string, i: number) => <li key={i}>{m}</li>)}
             </ul>
-            <a href={`https://github.com/${p.github}`} target="_blank" rel="noreferrer" style={{ display: "inline-block", marginTop: 12, fontSize: 13, color: accent, textDecoration: "none", fontWeight: 600 }}>{labelTexts.sourceCode} ↗</a>
+            
+            {/* --- ĐOẠN MỚI THÊM NẰM Ở ĐÂY --- */}
+            <div style={{ display: "flex", gap: 20, marginTop: 16 }}>
+              {p.github && (
+                <a href={`https://github.com/${p.github}`} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: accent, textDecoration: "none", fontWeight: 600 }}>{labelTexts.sourceCode} ↗</a>
+              )}
+              {p.link && (
+                <a href={p.link} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: th.textPri, textDecoration: "none", fontWeight: 600 }}>{labelTexts.liveDemo} ↗</a>
+              )}
+            </div>
+            {/* ----------------------------- */}
+
           </div>
         )}
       </div>
@@ -415,6 +428,7 @@ export default function Portfolio() {
     commitments: lang === "vi" ? "Định hướng & Cam kết" : "Direction & commitment",
     copied: lang === "vi" ? "Đã sao chép!" : "Copied!",
     sourceCode: lang === "vi" ? "Xem source code trên GitHub" : "View source code on GitHub",
+    liveDemo: lang === "vi" ? "Xem website" : "Live Demo",
   };
 
   return (
@@ -487,6 +501,7 @@ export default function Portfolio() {
                     { icon: "☎", label: hs.dienThoai },
                     { icon: "GH", label: "GitHub", href: `https://github.com/${hs.github}` },
                     { icon: "IN", label: "LinkedIn", href: `https://${hs.linkedin}` },
+                    { icon: "FB", label: "Facebook", href: `https://${hs.facebook}` },
                   ].map((c, i) => (
                     <ContactChip key={i} icon={c.icon} label={c.label} href={c.href} onClick={c.fn} th={th} />
                   ))}
