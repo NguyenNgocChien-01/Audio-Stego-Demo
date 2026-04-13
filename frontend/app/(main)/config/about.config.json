@@ -66,7 +66,7 @@
     "links": [
       { "label": "GitHub", "href": "https://github.com/NguyenNgocChien-01" },
       { "label": "Email",  "href": "mailto:ngocchiien23l@gmail.com" },
-      { "label": "Portfolio",  "href": "http://localhost:3000/info" }
+      { "label": "Portfolio",  "href": "/info" }
     ]
   }
 }
