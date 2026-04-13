@@ -19,26 +19,26 @@ const DATA = {
     gioiThieu:
       "Sinh viên năm cuối ngành Hệ thống Thông tin tại Trường Đại học Cần Thơ với nền tảng kỹ thuật vững chắc. Có kinh nghiệm làm việc với cơ sở dữ liệu, phát triển ứng dụng web (Back-end) và tích hợp các mô hình Trí tuệ Nhân tạo vào hệ thống thực tế. Khả năng học hỏi nhanh, thích ứng tốt với nhiều vai trò từ Lập trình viên, Kỹ sư Dữ liệu đến Phân tích Nghiệp vụ.",
     hocVan: {
-      truong: "Trường Đại học Cần Thơ",
+      truong: "Đại học Cần Thơ",
       gpa: "3,58 / 4,0",
       thoiGian: "2022 – 2026",
-      khoa: "Khoa Công nghệ Thông tin & Truyền thông",
-      nganh: "Hệ thống Thông tin",
+      khoa: "Trường Công nghệ Thông tin & Truyền thông",
+      nganh: " Khoa Hệ thống Thông tin",
       noiBat: [
         "Điểm cao trong các môn Cơ sở dữ liệu, Phân tích Dữ liệu, Hệ thống Thông tin",
         "Top sinh viên xuất sắc ngành Hệ thống Thông tin",
       ],
     },
     kyNang: {
-      ngonNgu: ["Python", "PHP", "JavaScript", "C#", "C"],
-      framework: ["Django", "FastAPI", "Laravel", "Next.js", "PyTorch", "TensorFlow"],
+      ngonNgu: ["Python", "PHP",  "C", "C#"],
+      framework: ["Django", "FastAPI", "Laravel"],
       duLieu: ["SQL Server", "MySQL", "Oracle", "Power BI", "Phân tích dữ liệu"],
       congCu: ["Git / GitHub", "Docker", "Google Colab", "Kaggle"],
       memDeo: ["Giải quyết vấn đề", "Tư duy phản biện", "Làm việc nhóm", "Nghiên cứu kỹ thuật"],
     },
     thanhTich: [
       { ten: "Học bổng Khuyến khích Học tập ", nam: "HK1 & HK2 năm 2025 – 2026", to_chuc: "Đại học Cần Thơ", loai: "Thành tích", bgLight: "#e0e7ff", bgDark: "#3730a3" },
-      { ten: "Danh hiệu Sinh viên 5 Tốt cấp Trường", nam: "2024 – 2025", to_chuc: "Đại học Cần Thơ", loai: "Thành tích", bgLight: "#dcfce7", bgDark: "#166534" },
+      { ten: "Danh hiệu Sinh viên 5 Tốt cấp Trường CNTT và TT", nam: "2024 – 2025", to_chuc: "Đại học Cần Thơ", loai: "Thành tích", bgLight: "#dcfce7", bgDark: "#166534" },
       { ten: "Gemini Certified University Student", nam: "2025", to_chuc: "Google", loai: "Chứng chỉ", link: "https://edu.google.accredible.com/a6983df9-75e3-4d3e-86e9-b5bfaf2d8df4#acc.brGiDthe", bgLight: "#fef08a", bgDark: "#854d0e" },
       { ten: "VSTEP B1", nam: "2024", to_chuc: "Chứng chỉ Ngoại ngữ", loai: "Chứng chỉ", bgLight: "#ffedd5", bgDark: "#9a3412" },
     ],
@@ -113,7 +113,7 @@ const DATA = {
     facebook: "www.facebook.com/chiienn02/",
     diaChi: "Ninh Kieu, Can Tho",
     gioiThieu:
-      "Final-year Information Systems student at Can Tho University with a solid technical foundation. Experienced in working with databases, developing web applications (Back-end), and integrating Artificial Intelligence models into real-world systems. Fast learner, highly adaptable to various roles from Software Developer, Data Engineer to Business Analyst.",
+      "Final-year Information Systems student at School of Information and Communication Technology - Can Tho University with a solid technical foundation. Experienced in working with databases, developing web applications (Back-end), and integrating Artificial Intelligence models into real-world systems. Fast learner, highly adaptable to various roles from Software Developer, Data Engineer to Business Analyst.",
     hocVan: {
       truong: "Can Tho University",
       gpa: "3.58 / 4.0",
@@ -134,7 +134,7 @@ const DATA = {
     },
     thanhTich: [
       { ten: "Academic Excellence Scholarship Sem 1 & 2", nam: "2025 – 2026", to_chuc: "Can Tho University", loai: "Award", bgLight: "#e0e7ff", bgDark: "#3730a3" },
-      { ten: "Student of 5 Merits at University Level", nam: "2024 – 2025", to_chuc: "Can Tho University", loai: "Award", bgLight: "#dcfce7", bgDark: "#166534" },
+      { ten: "University-level Student of 5 Merits, School of Information and Communication Technology", nam: "2024 – 2025", to_chuc: "Can Tho University", loai: "Award", bgLight: "#dcfce7", bgDark: "#166534" },
       { ten: "Gemini Certified University Student", nam: "2025", to_chuc: "Google", loai: "Certificate", link: "https://edu.google.accredible.com/a6983df9-75e3-4d3e-86e9-b5bfaf2d8df4#acc.brGiDthe", bgLight: "#fef08a", bgDark: "#854d0e" },
       { ten: "VSTEP B1", nam: "2024", to_chuc: "Foreign Language Certificate", loai: "Certificate", bgLight: "#ffedd5", bgDark: "#9a3412" },
     ],
