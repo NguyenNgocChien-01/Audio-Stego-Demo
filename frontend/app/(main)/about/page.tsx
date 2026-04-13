@@ -1,13 +1,11 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import cfg from "@/app/config/about.config.json";
+import cfg from "@/app/(main)/config/about.config.json";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 type FlowStep = { id: string; text: string };
 type FlowData  = { label: string; steps: FlowStep[] };
 
-// ─── useReveal ────────────────────────────────────────────────────────────────
 function useReveal(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -24,7 +22,6 @@ function useReveal(threshold = 0.15) {
   return { ref, visible };
 }
 
-// ─── Reveal wrapper ───────────────────────────────────────────────────────────
 function Reveal({ children, delay = 0, style = {} }: {
   children: React.ReactNode; delay?: number; style?: React.CSSProperties;
 }) {
@@ -41,7 +38,6 @@ function Reveal({ children, delay = 0, style = {} }: {
   );
 }
 
-// ─── Animated counter ─────────────────────────────────────────────────────────
 function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
   const [val, setVal] = useState(0);
   const { ref, visible } = useReveal(0.3);
@@ -59,7 +55,6 @@ function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
   return <span ref={ref}>{val}{suffix}</span>;
 }
 
-// ─── Magnetic word — hover nảy ────────────────────────────────────────────────
 function MagWord({ word, delay, accent = false }: {
   word: string; delay: number; accent?: boolean;
 }) {
@@ -72,9 +67,7 @@ function MagWord({ word, delay, accent = false }: {
         display: "inline-block",
         marginRight: "0.28em",
         color: accent ? "var(--accent)" : "inherit",
-        transform: hov
-          ? "translateY(-10px) scale(1.1)"
-          : "translateY(0) scale(1)",
+        transform: hov ? "translateY(-10px) scale(1.1)" : "translateY(0) scale(1)",
         transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1)",
         cursor: "default",
         animation: `wordDrop 0.5s ease ${delay}s both`,
@@ -85,43 +78,19 @@ function MagWord({ word, delay, accent = false }: {
   );
 }
 
-// ─── Capacity bar ─────────────────────────────────────────────────────────────
-function CapBar({ value, delay }: { value: number; delay: number }) {
-  const { ref, visible } = useReveal(0.2);
-  const label = value >= 85 ? "Cao" : value >= 65 ? "Trung bình" : "Vừa";
-  return (
-    <div ref={ref} style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "10px" }}>
-      <span style={{ fontSize: "0.68rem", color: "#888", minWidth: "56px" }}>Sức chứa</span>
-      <div style={{ flex: 1, height: "3px", background: "rgba(0,0,0,0.1)", borderRadius: "2px", overflow: "hidden" }}>
-        <div style={{
-          height: "100%",
-          width: visible ? `${value}%` : "0%",
-          background: "var(--primary)",
-          borderRadius: "2px",
-          transition: `width 1.1s cubic-bezier(0.22,1,0.36,1) ${delay}ms`,
-        }} />
-      </div>
-      <span style={{ fontSize: "0.68rem", color: "#888", fontFamily: "monospace", minWidth: "60px" }}>{label}</span>
-    </div>
-  );
-}
-
-// ─── Section label ────────────────────────────────────────────────────────────
 const Label = ({ children }: { children: React.ReactNode }) => (
   <div style={{
     fontSize: "0.74rem", fontWeight: 700, color: "#666",
     letterSpacing: "0.12em", textTransform: "uppercase",
     marginBottom: "18px", display: "flex", alignItems: "center", gap: "10px",
   }}>
-    <div style={{ width: "14px", height: "2px", background: "var(--accent)", borderRadius: "2px" }} />
+    <div style={{ width: "14px", height: "2px", background: "var(--accent)", borderRadius: "2px", flexShrink: 0 }} />
     {children}
   </div>
 );
 
-// ─── Waveform ─────────────────────────────────────────────────────────────────
 const BARS = [4,7,14,20,13,18,24,16,10,22,15,8,19,12,6,17,11,23,9,16,13,7,20,14,5];
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function AboutPage() {
   const { hero, stats, algorithms, author } = cfg;
 
@@ -148,16 +117,16 @@ export default function AboutPage() {
         </div>
 
         <h1 style={{
-          fontSize: "clamp(2rem,5vw,2.9rem)", fontWeight: 900,
+          fontSize: "clamp(1.6rem,5vw,2.9rem)", fontWeight: 900,
           color: "var(--primary)", margin: "0 0 20px", lineHeight: 1.15,
         }}>
           <div style={{ marginBottom: "4px" }}>
-            {hero.title_line1.map((w, i) => (
+            {hero.title_line1.map((w: string, i: number) => (
               <MagWord key={i} word={w} delay={0.35 + i * 0.08} />
             ))}
           </div>
           <div>
-            {hero.title_line2.map((w, i) => (
+            {hero.title_line2.map((w: string, i: number) => (
               <MagWord key={i} word={w} delay={0.75 + i * 0.08} accent />
             ))}
           </div>
@@ -171,7 +140,6 @@ export default function AboutPage() {
           {hero.subtitle}
         </p>
 
-        {/* Waveform decoration */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "center",
           gap: "3px", height: "32px", animation: "fadeUp 0.5s ease 1.3s both",
@@ -187,8 +155,13 @@ export default function AboutPage() {
       </div>
 
       {/* ── STATS ─────────────────────────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "14px", marginBottom: "60px" }}>
-        {stats.map((s, i) => (
+      <div style={{
+        display: "grid",
+        /* Mobile: 1 cột, ≥480px: 3 cột */
+        gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+        gap: "14px", marginBottom: "60px",
+      }}>
+        {stats.map((s: any, i: number) => (
           <Reveal key={i} delay={i * 90}>
             <div className="hover-card" style={{
               background: "var(--surface)", borderRadius: "12px",
@@ -197,8 +170,9 @@ export default function AboutPage() {
               transition: "transform 0.2s, box-shadow 0.2s",
             }}>
               <div style={{
-                fontSize: "2rem", fontWeight: 900, color: "var(--primary)",
-                fontFamily: "'JetBrains Mono', monospace", lineHeight: 1.1,
+                fontSize: "clamp(1.5rem,4vw,2rem)", fontWeight: 900,
+                color: "var(--primary)", fontFamily: "'JetBrains Mono', monospace",
+                lineHeight: 1.1,
               }}>
                 <Counter to={s.value} suffix={s.suffix} />
               </div>
@@ -213,7 +187,7 @@ export default function AboutPage() {
       <div style={{ marginBottom: "60px" }}>
         <Reveal><Label>Các kỹ thuật giấu tin</Label></Reveal>
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {algorithms.map((algo, i) => (
+          {algorithms.map((algo: any, i: number) => (
             <Reveal key={i} delay={i * 80}>
               <div className="hover-card" style={{
                 background: algo.bg, borderRadius: "10px",
@@ -227,19 +201,32 @@ export default function AboutPage() {
                   height: "2px", width: "100%",
                   background: `linear-gradient(90deg, ${algo.tagColor}55, transparent)`,
                 }} />
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px", flexWrap: "wrap" }}>
-                  <h4 style={{ margin: 0, fontSize: "0.96rem", fontWeight: 800 }}>{algo.title}</h4>
+                {/* Head: tên + tag xếp hàng ngang, wrap sang dòng mới trên mobile nhỏ */}
+                <div style={{
+                  display: "flex", alignItems: "flex-start",
+                  gap: "10px", marginBottom: "8px",
+                  flexWrap: "wrap",
+                }}>
+                  <h4 style={{
+                    margin: 0, fontSize: "clamp(0.85rem,2.5vw,0.96rem)",
+                    fontWeight: 800, flex: "1 1 auto",
+                  }}>
+                    {algo.title}
+                  </h4>
                   <span style={{
                     fontSize: "0.65rem", fontWeight: 700,
                     background: algo.tagColor, color: "#fff",
                     padding: "2px 10px", borderRadius: "20px",
                     letterSpacing: "0.07em", textTransform: "uppercase",
+                    flexShrink: 0, alignSelf: "center",
                   }}>{algo.tag}</span>
                 </div>
-                <p style={{ fontSize: "0.86rem", color: "var(--text-muted)", margin: 0, lineHeight: 1.7 }}>
+                <p style={{
+                  fontSize: "clamp(0.78rem,2vw,0.86rem)",
+                  color: "var(--text-muted)", margin: 0, lineHeight: 1.7,
+                }}>
                   {algo.text}
                 </p>
-                {/* <CapBar value={algo.capacity} delay={i * 80 + 150} /> */}
               </div>
             </Reveal>
           ))}
@@ -250,10 +237,14 @@ export default function AboutPage() {
       <Reveal delay={80}>
         <Label>Về tác giả</Label>
         <div style={{
-          display: "flex", alignItems: "center", gap: "28px",
+          display: "flex",
+          /* Stack dọc trên màn hình nhỏ */
+          flexDirection: "row",
+          alignItems: "center", gap: "28px",
           padding: "28px", background: "var(--surface-2)",
           borderRadius: "12px", border: "1.5px solid #000",
-          boxShadow: "3px 3px 0 #000", flexWrap: "wrap",
+          boxShadow: "3px 3px 0 #000",
+          flexWrap: "wrap",
         }}>
           <div style={{ position: "relative", flexShrink: 0 }}>
             <div style={{
@@ -273,17 +264,18 @@ export default function AboutPage() {
           </div>
 
           <div style={{ flex: 1, minWidth: "200px" }}>
-            <h3 style={{ margin: "0 0 4px", fontSize: "1.15rem", fontWeight: 900 }}>
+            <h3 style={{ margin: "0 0 4px", fontSize: "clamp(1rem,3vw,1.15rem)", fontWeight: 900 }}>
               {author.name}
             </h3>
             <p style={{ margin: "0 0 14px", fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: 1.75 }}>
               {author.major} — {author.university} ({author.course})<br />
+              {/* ✅ MSSV cập nhật */}
               <span style={{ fontFamily: "monospace", fontSize: "0.78rem" }}>
-                MSSV: {author.student_id}
+                MSSV: B2203431
               </span>
             </p>
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              {author.links.map(link => (
+              {author.links.map((link: any) => (
                 <a key={link.label} href={link.href}
                   target="_blank" rel="noreferrer"
                   className="author-link"
@@ -292,6 +284,9 @@ export default function AboutPage() {
                     textDecoration: "none", padding: "5px 16px",
                     borderRadius: "20px", border: "1.5px solid #000",
                     transition: "all 0.15s",
+                    /* Đủ vùng tap trên mobile */
+                    minHeight: "36px", display: "inline-flex",
+                    alignItems: "center",
                   }}
                 >
                   {link.label}
@@ -302,7 +297,7 @@ export default function AboutPage() {
         </div>
       </Reveal>
 
-      {/* ── GLOBAL ANIMATIONS ─────────────────────────────────────────────── */}
+      {/* ── GLOBAL STYLES & ANIMATIONS ────────────────────────────────────── */}
       <style>{`
         @keyframes wordDrop {
           from { opacity:0; transform:translateY(-14px); }
@@ -324,22 +319,59 @@ export default function AboutPage() {
           0%,100% { transform:scale(1);    opacity:0.4; }
           50%      { transform:scale(1.13); opacity:0.1; }
         }
+
+        /* ── Hover effects ── */
         .hover-card:hover {
           transform: translateY(-3px) !important;
           box-shadow: 5px 5px 0 #000 !important;
         }
-        .btn-primary:hover {
-          transform: translateY(-2px) !important;
-          box-shadow: 5px 5px 0 #333 !important;
-        }
-        .btn-outline:hover {
-          background: #000 !important;
-          color: #fff !important;
-          transform: translateY(-2px) !important;
-        }
         .author-link:hover {
           background: #000 !important;
           color: #fff !important;
+        }
+
+        /* ── RESPONSIVE ─────────────────────────────────────────────────── */
+
+        /* Tablet nhỏ / mobile lớn */
+        @media (max-width: 640px) {
+          /* Hero */
+          div[style*="padding: 60px 32px"] {
+            padding: 40px 20px !important;
+            border-radius: 14px !important;
+            margin-bottom: 36px !important;
+          }
+
+          /* Author card: stack dọc */
+          div[style*="flexDirection: row"][style*="flexWrap: wrap"] {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 16px !important;
+            padding: 20px !important;
+          }
+        }
+
+        /* Mobile nhỏ */
+        @media (max-width: 400px) {
+          /* Stat cards: 1 cột, layout ngang (icon + text) */
+          div[style*="grid-template-columns: repeat(auto-fit"] > div {
+            text-align: left !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 14px !important;
+          }
+
+          /* Algo padding nhỏ hơn */
+          div[style*="padding: 20px 24px"] {
+            padding: 14px 16px !important;
+          }
+        }
+
+        /* Touch targets đủ 44px cho tất cả nút / link */
+        @media (hover: none) {
+          .author-link {
+            min-height: 44px !important;
+            padding: 8px 18px !important;
+          }
         }
       `}</style>
     </div>
