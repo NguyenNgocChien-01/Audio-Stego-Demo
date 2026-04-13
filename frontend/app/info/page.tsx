@@ -126,8 +126,8 @@ const DATA = {
       ],
     },
     kyNang: {
-      ngonNgu: ["Python", "PHP", "JavaScript", "C#", "C"],
-      framework: ["Django", "FastAPI", "Laravel", "Next.js", "PyTorch", "TensorFlow"],
+      ngonNgu: ["Python", "PHP",  "C", "C#"],
+      framework: ["Django", "FastAPI", "Laravel"],
       duLieu: ["SQL Server", "MySQL", "Oracle", "Power BI", "Data Analysis"],
       congCu: ["Git / GitHub", "Docker", "Google Colab", "Kaggle"],
       memDeo: ["Problem Solving", "Critical Thinking", "Teamwork", "Tech Research"],
