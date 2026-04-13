@@ -12,7 +12,7 @@ const DATA = {
     dienThoai: "0399 428 511",
     github: "NguyenNgocChien-01",
     linkedin: "linkedin.com/in/nguyenngocchien",
-    facebook: "https://www.facebook.com/chiienn02/",
+    facebook: "www.facebook.com/chiienn02/",
     diaChi: "Ninh Kiều, Cần Thơ",
     gioiThieu:
       "Sinh viên năm cuối ngành Hệ thống Thông tin tại Trường Đại học Cần Thơ với nền tảng kỹ thuật vững chắc. Có kinh nghiệm làm việc với cơ sở dữ liệu, phát triển ứng dụng web (Back-end) và tích hợp các mô hình Trí tuệ Nhân tạo vào hệ thống thực tế. Khả năng học hỏi nhanh, thích ứng tốt với nhiều vai trò từ Lập trình viên, Kỹ sư Dữ liệu đến Phân tích Nghiệp vụ.",
@@ -96,12 +96,12 @@ const DATA = {
   en: {
     avatar: "/avt.png",
     ten: "Nguyen Ngoc Chien",
-    vaiTro: "Back-end Developer · Data Engineer · Business Analyst · AI/ML Engineer",
+    vaiTro: "Data Engineer · Business Analyst · Backend-Developer",
     email: "ngocchiien23l@gmail.com",
     dienThoai: "0399 428 511",
     github: "NguyenNgocChien-01",
     linkedin: "linkedin.com/in/nguyenngocchien",
-    facebook: "https://www.facebook.com/chiienn02/",
+    facebook: "www.facebook.com/chiienn02/",
     diaChi: "Ninh Kieu, Can Tho",
     gioiThieu:
       "Final-year Information Systems student at Can Tho University with a solid technical foundation. Experienced in working with databases, developing web applications (Back-end), and integrating Artificial Intelligence models into real-world systems. Fast learner, highly adaptable to various roles from Software Developer, Data Engineer to Business Analyst.",
@@ -392,6 +392,13 @@ export default function Portfolio() {
   const th = getTheme(theme === "dark");
   const hs = DATA[lang];
 
+  // Update browser tab title
+  useEffect(() => {
+    document.title = lang === "vi" 
+      ? `${hs.ten} - Portfolio` 
+      : `${hs.ten} - Portfolio`;
+  }, [lang, hs.ten]);
+
   // Scroll to top effect
   useEffect(() => {
     const handleScroll = () => {
@@ -442,6 +449,16 @@ export default function Portfolio() {
         .skill-grid, .award-grid, .extra-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
         .avatar-image { object-fit: cover; border-radius: 17px; display: block; width: 100%; height: auto; }
         
+        @keyframes aurora1 {
+          from { transform: translateY(0px) scale(1); opacity: 0.8; }
+          to { transform: translateY(-20px) scale(1.1); opacity: 1; }
+        }
+        
+        @keyframes aurora2 {
+          from { transform: translateX(0px) scale(1); opacity: 0.8; }
+          to { transform: translateX(20px) scale(1.05); opacity: 1; }
+        }
+        
         @media (max-width: 768px) {
           .stats-grid, .highlight-grid, .skill-grid, .award-grid, .extra-grid { grid-template-columns: 1fr; }
           .stats-grid > div { border-right: none !important; padding: 16px 0; }
@@ -453,7 +470,10 @@ export default function Portfolio() {
         <div style={{ position: "absolute", top: "-20%", left: "-10%", width: "60vw", height: "60vw", borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)", animation: "aurora1 12s ease-in-out infinite alternate" }} />
         <div style={{ position: "absolute", bottom: "-10%", right: "-10%", width: "50vw", height: "50vw", borderRadius: "50%", background: "radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)", animation: "aurora2 15s ease-in-out infinite alternate" }} />
         <div style={{ position: "absolute", top: "40%", right: "20%", width: "30vw", height: "30vw", borderRadius: "50%", background: "radial-gradient(circle, rgba(6,182,212,0.07) 0%, transparent 70%)", animation: "aurora1 18s ease-in-out infinite alternate-reverse" }} />
-        <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(rgba(99,102,241,0.15) 1px, transparent 1px)", backgroundSize: "32px 32px", opacity: 0.5 }} />
+        {/* Horizontal stripes background */}
+        <div style={{ position: "absolute", inset: 0, backgroundImage: `repeating-linear-gradient(0deg, ${theme === "dark" ? "rgba(99,102,241,0.06)" : "rgba(99,102,241,0.04)"} 0px, ${theme === "dark" ? "rgba(99,102,241,0.06)" : "rgba(99,102,241,0.04)"} 2px, transparent 2px, transparent 24px)`, opacity: 0.8 }} />
+        {/* Grid overlay */}
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(99,102,241,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.06) 1px, transparent 1px)", backgroundSize: "48px 48px", opacity: 0.3 }} />
       </div>
 
       <div style={{ position: "relative", zIndex: 1 }}>
@@ -516,7 +536,7 @@ export default function Portfolio() {
                   {/* 9. Tối ưu ảnh bằng next/image */}
                   <Image 
                     src={hs.avatar} 
-                    alt={hs.ten} 
+                    alt={lang === "vi" ? `Avatar của ${hs.ten}` : `Avatar of ${hs.ten}`} 
                     width={168} 
                     height={168} 
                     priority

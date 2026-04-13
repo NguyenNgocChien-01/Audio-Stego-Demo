@@ -1,9 +1,18 @@
 import React from "react";
 
+export const metadata = {
+  title: "Nguyễn Ngọc Chiến - Portfolio",
+  description: "Data Engineer · Business Analyst · Backend Developer - Sinh viên năm cuối Hệ thống Thông tin, Trường Đại học Cần Thơ",
+  viewport: "width=device-width, initial-scale=1",
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi">
       <head>
+        <title>Nguyễn Ngọc Chiến - Portfolio</title>
+        <meta name="description" content="Data Engineer · Business Analyst · Backend Developer" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
