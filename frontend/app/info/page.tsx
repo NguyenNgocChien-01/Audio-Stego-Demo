@@ -581,7 +581,7 @@ export default function Portfolio() {
                   { nhan: lang === "vi" ? "Vị trí ứng tuyển" : "Position", gt: "Back-end / Data Engineer / BA" },
                   { nhan: lang === "vi" ? "Thời gian bắt đầu" : "Start Time", gt: lang === "vi" ? "Ngay lập tức (full-time)" : "Immediately (full-time)" },
                   { nhan: lang === "vi" ? "Khả năng di chuyển" : "Relocation", gt: lang === "vi" ? "Linh hoạt theo yêu cầu" : "Flexible on request" },
-                  { nhan: "GPA / Xếp loại", gt: lang === "vi" ? "3,58 / 4,0 · Xuất sắc" : "3.58 / 4.0 · Excellent" },
+                  { nhan: "GPA / Xếp loại", gt: lang === "vi" ? "3,58 / 4,0 · Giỏi" : "3.58 / 4.0 · Very good" },
                   { nhan: lang === "vi" ? "Ngoại ngữ" : "Language", gt: lang === "vi" ? "Tiếng Anh VSTEP B1" : "English VSTEP B1" },
                 ].map((item, i) => (
                   <div key={i}>

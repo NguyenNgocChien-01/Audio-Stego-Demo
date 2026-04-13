@@ -13,10 +13,18 @@ EXPOSED_HEADERS = [
     "Metrics-K", 
     "Algo-Name"
 ]
-import os
-
-# Hỗ trợ nhiều origin cùng lúc
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+# Hỗ trợ nhiều origin (Xóa dấu / ở cuối)
+allowed_origins = [
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://frontend:3000",
+    "http://stego.nnchien.id.vn",  # Thêm domain production
+    "https://stego.nnchien.id.vn"  # Thêm bản https nếu có
+]
 
 app.add_middleware(
     CORSMiddleware,

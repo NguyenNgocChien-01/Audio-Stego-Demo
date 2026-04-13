@@ -7,6 +7,26 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .header-container { padding: 0 16px !important; height: auto !important; }
+          .header-logo { gap: 8px !important; }
+          .header-logo-text { font-size: 0.95rem !important; }
+          .header-logo-subtitle { font-size: 0.5rem !important; }
+          .header-nav { display: none !important; }
+          .header-spacer { display: none !important; }
+        }
+        
+        @media (max-width: 640px) {
+          .header-container { height: auto !important; padding: 12px 12px !important; }
+          .header-logo { gap: 6px !important; }
+          .header-logo-icon { width: 32px !important; height: 32px !important; }
+          .header-logo-icon svg { width: 16px !important; height: 16px !important; }
+          .header-logo-text { font-size: 0.9rem !important; }
+          .footer-container { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+          .footer-section-right { text-align: left !important; }
+        }
+      `}</style>
       
       {/* Header */}
       <header style={{
@@ -16,13 +36,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         WebkitBackdropFilter: "blur(16px)",
         borderBottom: "1px solid rgba(200,134,10,0.3)",
       }}>
-        <div style={{
+        <div className="header-container" style={{
           maxWidth: "1160px", margin: "0 auto", padding: "0 36px",
           height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           {/* Logo */}
-          <Link href="/encode" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            <div style={{
+          <Link href="/encode" className="header-logo" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <div className="header-logo-icon" style={{
               width: "36px", height: "36px", background: "var(--accent)",
               borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
             }}>
@@ -33,17 +53,17 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               </svg>
             </div>
             <div>
-              <div style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: "1.1rem", color: "#fff", letterSpacing: "-0.01em", lineHeight: 1.1 }}>
+              <div className="header-logo-text" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: "1.1rem", color: "#fff", letterSpacing: "-0.01em", lineHeight: 1.1 }}>
                 StegoAudio
               </div>
-              <div style={{ fontSize: "0.6rem", color: "rgba(200,134,10,0.8)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 500 }}>
+              <div className="header-logo-subtitle" style={{ fontSize: "0.6rem", color: "rgba(200,134,10,0.8)", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 500 }}>
                 Ẩn danh & Bảo mật
               </div>
             </div>
           </Link>
 
           {/* Nav tabs */}
-          <nav style={{ display: "flex", alignItems: "center", gap: "4px", background: "rgba(255,255,255,0.07)", padding: "4px", borderRadius: "10px" }}>
+          <nav className="header-nav" style={{ display: "flex", alignItems: "center", gap: "4px", background: "rgba(255,255,255,0.07)", padding: "4px", borderRadius: "10px" }}>
             {[
               { href: "/about", label: "Giới thiệu" },
               { href: "/encode", label: "Giấu tin" },
@@ -62,7 +82,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             ))}
           </nav>
 
-          <div style={{ width: "140px" }} /> {/* Spacer cân bằng layout */}
+          <div className="header-spacer" style={{ width: "140px" }} /> {/* Spacer cân bằng layout */}
         </div>
       </header>
 
@@ -82,7 +102,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       {/* Footer */}
       <footer style={{ background: "var(--primary)", borderTop: "3px solid var(--accent)", padding: "28px 36px" }}>
-        <div style={{ maxWidth: "1160px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className="footer-container" style={{ maxWidth: "1160px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "0.95rem", color: "#fff", fontWeight: 600, marginBottom: "4px" }}>
               Hệ thống giấu tin trong âm thanh số
@@ -91,7 +111,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               Stateless Architecture — Không lưu trữ dữ liệu người dùng
             </div>
           </div>
-          <div style={{ textAlign: "right" }}>
+          <div className="footer-section-right" style={{ textAlign: "right" }}>
             <div style={{ fontSize: "0.82rem", color: "rgba(200,134,10,0.9)", fontWeight: 600 }}>Nguyễn Ngọc Chiến</div>
             <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", marginTop: "2px", fontFamily: "'JetBrains Mono', monospace" }}>B2203431</div>
           </div>

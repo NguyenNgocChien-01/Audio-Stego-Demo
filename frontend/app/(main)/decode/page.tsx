@@ -215,25 +215,40 @@ function DecodePage() {
   const[showCompare,setShowCompare]=useState(false);
   const resultRef=useRef<HTMLDivElement>(null);
 useEffect(() => {
-  fetch(`${process.env.NEXT_PUBLIC_API_URL}/stego/config`)
-    .then((r) => r.json())
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  console.log('[DEBUG] Fetching from API:', apiUrl);
+  
+  if (!apiUrl) {
+    console.error('[ERROR] NEXT_PUBLIC_API_URL chưa được thiết lập!');
+    return;
+  }
+
+  fetch(`${apiUrl}/stego/config`)
+    .then((r) => {
+      console.log('[DEBUG] Response status:', r.status);
+      if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+      return r.json();
+    })
     .then((data) => {
+      console.log('[DEBUG] Config data received:', data);
       if (data && data.algorithms) {
-        // 1. Lọc các thuật toán đang hoạt động
-        // 2. Sắp xếp giảm dần theo algo_id
         const active = data.algorithms
           .filter((a: any) => a.is_active)
           .sort((a: any, b: any) => b.algo_id - a.algo_id);
 
+        console.log('[DEBUG] Active algorithms:', active);
         setAlgorithms(active);
 
-        // Chọn thuật toán đầu tiên trong danh sách đã sắp xếp
         if (active.length > 0) {
           setSelectedAlgoId(active[0].algo_id.toString());
         }
+      } else {
+        console.error('[ERROR] Không tìm thấy algorithms trong response');
       }
     })
-    .catch(console.error);
+    .catch((err) => {
+      console.error('[ERROR] Lỗi khi fetch config:', err.message);
+    });
 }, []);
 
   const selectedAlgo=algorithms.find(a=>String(a.algo_id)===String(selectedAlgoId));
