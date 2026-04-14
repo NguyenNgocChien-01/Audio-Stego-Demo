@@ -13,7 +13,7 @@ const DATA = {
     email: "ngocchiien23l@gmail.com",
     dienThoai: "0399 428 511",
     github: "NguyenNgocChien-01",
-    linkedin: "linkedin.com/in/nguyenngocchien",
+    linkedin: "linkedin.com/in/chien-nguyen-ngoc-7862063b7/",
     facebook: "www.facebook.com/chiienn02/",
     diaChi: "Ninh Kiều, Cần Thơ",
     gioiThieu:
@@ -109,7 +109,7 @@ const DATA = {
     email: "ngocchiien23l@gmail.com",
     dienThoai: "0399 428 511",
     github: "NguyenNgocChien-01",
-    linkedin: "linkedin.com/in/nguyenngocchien",
+    linkedin: "linkedin.com/in/chien-nguyen-ngoc-7862063b7/",
     facebook: "www.facebook.com/chiienn02/",
     diaChi: "Ninh Kieu, Can Tho",
     gioiThieu:
