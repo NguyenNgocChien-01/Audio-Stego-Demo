@@ -8,7 +8,7 @@ const DATA = {
   vi: {
     avatar: "/avt.png",
     ten: "Nguyễn Ngọc Chiến",
-    vaiTro: "Data Engineer · Business Analyst · AI Engineer · Backend-Developer",
+    vaiTro: "Data Engineer · AI Engineer · Backend-Developer · Devops Engineer",
     ngaySinh: "02/01/2004",
     email: "ngocchiien23l@gmail.com",
     dienThoai: "0399 428 511",
@@ -96,7 +96,7 @@ const DATA = {
       "Rèn luyện thể lực",
     ],
     themVeToi: [
-      "Sẵn sàng đảm nhiệm: Back-end Developer, Data Engineer, Business Analyst (BA).",
+      "Sẵn sàng đảm nhiệm: Data Engineer, AI Engineer, Backend-Developer, Devops Engineer.",
       "Cẩn thận, chịu áp lực tốt, luôn tối ưu hóa mã nguồn và cấu trúc dữ liệu.",
       "Sẵn sàng làm việc toàn thời gian ngay lập tức và có thể di chuyển theo yêu cầu.",
     ],
@@ -104,7 +104,7 @@ const DATA = {
   en: {
     avatar: "/avt.png",
     ten: "Nguyen Ngoc Chien",
-    vaiTro: "Data Engineer · Business Analyst · AI Engineer · Backend-Developer",
+    vaiTro: "Data Engineer · AI Engineer · Backend-Developer · Devops Engineer",
     ngaySinh: "02/01/2004",
     email: "ngocchiien23l@gmail.com",
     dienThoai: "0399 428 511",
@@ -113,7 +113,7 @@ const DATA = {
     facebook: "www.facebook.com/chiienn02/",
     diaChi: "Ninh Kieu, Can Tho",
     gioiThieu:
-      "Final-year Information Systems student at School of Information and Communication Technology - Can Tho University with a solid technical foundation. Experienced in working with databases, developing web applications (Back-end), and integrating Artificial Intelligence models into real-world systems. Fast learner, highly adaptable to various roles from Software Developer, Data Engineer to Business Analyst.",
+      "Final-year Information Systems student at School of Information and Communication Technology - Can Tho University with a solid technical foundation. Experienced in working with databases, developing web applications (Back-end), and integrating Artificial Intelligence models into real-world systems. Fast learner, highly adaptable to various roles from Software Developer, Data Engineer, AI Engineer to Devops Engineer.",
     hocVan: {
       truong: "Can Tho University",
       gpa: "3.58 / 4.0",
@@ -192,7 +192,7 @@ const DATA = {
       "Physical training",
     ],
     themVeToi: [
-      "Ready to take on: Back-end Developer, Data Engineer, Business Analyst (BA).",
+      "Ready to take on: Data Engineer, AI Engineer, Back-end Developer, Devops Engineer.",
       "Careful, handle pressure well, always optimize source code and data structures.",
       "Ready to work full-time immediately and flexible to relocate upon request.",
     ],
@@ -438,7 +438,7 @@ export default function Portfolio() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "16px" }}>
                 {[
                   { label: lang === "vi" ? "Ngày sinh" : "Date of Birth", val: hs.ngaySinh },
-                  { label: lang === "vi" ? "Vị trí ứng tuyển" : "Position", val: "Data Engineer / Business Analyst / AI Engineer / Backend-Developer" },
+                  { label: lang === "vi" ? "Vị trí ứng tuyển" : "Position", val: "Data Engineer / AI Engineer / Backend-Developer/ Devops Engineer" },
                   { label: lang === "vi" ? "Thời gian bắt đầu" : "Start Time", val: lang === "vi" ? "Ngay lập tức" : "Immediately" },
                   { label: lang === "vi" ? "Khả năng di chuyển" : "Relocation", val: lang === "vi" ? "Linh hoạt" : "Flexible" },
                   { label: "GPA", val: hs.hocVan.gpa },
