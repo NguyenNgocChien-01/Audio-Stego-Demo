@@ -10,7 +10,7 @@ const DATA = {
     ten: "Nguyễn Ngọc Chiến",
     vaiTro: "Data Engineer · AI Engineer · Backend-Developer · Devops Engineer",
     ngaySinh: "02/01/2004",
-    email: "ngocchiien23l@gmail.com",
+    email: "ngocchiien23@gmail.com",
     dienThoai: "0399 428 511",
     github: "NguyenNgocChien-01",
     linkedin: "linkedin.com/in/chien-nguyen-ngoc-7862063b7/",
@@ -106,12 +106,12 @@ const DATA = {
     ten: "Nguyen Ngoc Chien",
     vaiTro: "Data Engineer · AI Engineer · Backend-Developer · Devops Engineer",
     ngaySinh: "02/01/2004",
-    email: "ngocchiien23l@gmail.com",
+    email: "ngocchiien23@gmail.com",
     dienThoai: "0399 428 511",
     github: "NguyenNgocChien-01",
     linkedin: "linkedin.com/in/chien-nguyen-ngoc-7862063b7/",
     facebook: "www.facebook.com/chiienn02/",
-    diaChi: "Ninh Kieu, Can Tho",
+    diaChi: "Ninh Kieu, Can Tho", 
     gioiThieu:
       "Final-year Information Systems student at School of Information and Communication Technology - Can Tho University with a solid technical foundation. Experienced in working with databases, developing web applications (Back-end), and integrating Artificial Intelligence models into real-world systems. Fast learner, highly adaptable to various roles from Software Developer, Data Engineer, AI Engineer to Devops Engineer.",
     hocVan: {
