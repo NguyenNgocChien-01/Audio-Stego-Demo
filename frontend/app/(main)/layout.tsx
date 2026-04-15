@@ -173,7 +173,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 transition: "all 0.15s",
                 marginBottom: "2px",
               }}>
-                <span style={{ fontSize: "1.1rem" }}>{item.icon}</span>
+           
                 {item.label}
                 {pathname === item.href && (
                   <span style={{ marginLeft: "auto", fontSize: "0.7rem", color: "rgba(200,134,10,0.8)", letterSpacing: "0.1em" }}>
@@ -274,7 +274,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 transition: "background 0.2s",
               }}
             >
-              <span style={{ fontSize: "1.3rem", lineHeight: 1 }}>{item.icon}</span>
+
               <span style={{
                 fontSize: "0.65rem", marginTop: "3px", fontWeight: active ? 700 : 400,
                 color: active ? "rgba(200,134,10,1)" : "rgba(255,255,255,0.5)",
