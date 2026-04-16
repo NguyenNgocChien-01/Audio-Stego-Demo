@@ -322,7 +322,7 @@ function EncodePage() {
   const[useCoverMic,setUseCoverMic]=useState(false);
   const[secretInputMode,setSecretInputMode]=useState<"type"|"mic">("type");
   const[secretMicFile,setSecretMicFile]=useState<File|null>(null);
-  const[result,setResult]=useState<{url:string;filename:string;metrics:{mse:number;psnr:number;snr:number};k:number;algo_name?:string}|null>(null);
+  const[result,setResult]=useState<{url:string;filename:string;metrics:{mse:number;psnr:number;snr:number};k:number;algo_name?:string;encodingTime?:number}|null>(null);
   const resultRef=useRef<HTMLDivElement>(null);
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -388,6 +388,7 @@ const handleEncode = async () => {
   if (!encodeReady) return;
   setLoading(true);
   setResult(null);
+  const startTime = performance.now();
 
   try {
     const fd = new FormData();
@@ -446,12 +447,16 @@ const handleEncode = async () => {
       const k_val = h_k ? parseInt(h_k) : 0;
       const algo_name = h_algo || selectedAlgo?.algo_name || "Unknown";
 
+      const endTime = performance.now();
+      const encodingTime = Math.round((endTime - startTime) / 10) / 100; // Làm tròn đến 2 chữ số thập phân
+
       const newResult = {
         url: blobUrl,
         filename: fname,
         metrics: metrics,
         k: k_val,
-        algo_name: algo_name
+        algo_name: algo_name,
+        encodingTime: encodingTime
       };
       setResult(newResult);
 
@@ -702,8 +707,8 @@ const handleEncode = async () => {
                 </div>
               </div>
               <div style={{ padding:"20px" }}>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"10px", marginBottom:"16px" }}>
-                  {[{label:"PSNR",value:(result.metrics?.psnr?.toFixed(2)||"—")+" dB",desc:"Chất lượng"},{label:"SNR",value:(result.metrics?.snr?.toFixed(2)||"—")+" dB",desc:"Tín nhiễu"},{label:"K",value:String(result.k??"—"),desc:"Bit dùng"}].map(m=>(
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:"10px", marginBottom:"16px" }}>
+                  {[{label:"PSNR",value:(result.metrics?.psnr?.toFixed(2)||"—")+" dB",desc:"Chất lượng"},{label:"SNR",value:(result.metrics?.snr?.toFixed(2)||"—")+" dB",desc:"Tín nhiễu"},{label:"K",value:String(result.k??"—"),desc:"Bit dùng"},{label:"Thời gian",value:(result.encodingTime??0)+" s",desc:"Thực thi"}].map(m=>(
                     <div key={m.label} style={{ background:"var(--surface-2)", borderRadius:"6px", padding:"12px", border:"1.5px solid #000", textAlign:"center" }}>
                       <div style={{ fontSize:"0.6rem", color:"#888", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"4px" }}>{m.label}</div>
                       <div style={{ fontSize:"1.05rem", fontWeight:700, color:"var(--primary)", fontFamily:"monospace" }}>{m.value}</div>

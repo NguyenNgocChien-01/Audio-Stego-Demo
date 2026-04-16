@@ -209,7 +209,7 @@ function DecodePage() {
   const[decodePassword,setDecodePassword]=useState("");
   const[loading,setLoading]=useState(false);
   const[decodeError,setDecodeError]=useState("");
-  const[decodeResult,setDecodeResult]=useState<{type:string;text?:string;url?:string;filename?:string;}|null>(null);
+  const[decodeResult,setDecodeResult]=useState<{type:string;text?:string;url?:string;filename?:string;decodingTime?:number}|null>(null);
   const[sourceUrl,setSourceUrl]=useState<string|null>(null);
   const[dragOver,setDragOver]=useState(false);
   const[showCompare,setShowCompare]=useState(false);
@@ -279,6 +279,7 @@ const handleDecode = async () => {
   setLoading(true);
   setDecodeResult(null);
   setDecodeError("");
+  const startTime = performance.now();
 
   try {
     const fd = new FormData();
@@ -305,6 +306,9 @@ const handleDecode = async () => {
     // console.log("Data length/preview:", typeof data.data === 'string' ? data.data.substring(0, 20) + "..." : typeof data.data);
     // // -----------------------------
 if (res.ok && data.status === "success") {
+      const endTime = performance.now();
+      const decodingTime = Math.round((endTime - startTime) / 10) / 100; // Làm tròn đến 2 chữ số thập phân
+      
       let rawType = data.payload_type || data.type || "";
       let extractedData = data.data || data.content_text || data.text || "";
       
@@ -327,7 +331,8 @@ if (res.ok && data.status === "success") {
         finalResult = {
           type: "text",
           text: extractedData,
-          filename: extractedFilename(decodeFile.name, "text").replace(/\.[^.]+$/, ".txt")
+          filename: extractedFilename(decodeFile.name, "text").replace(/\.[^.]+$/, ".txt"),
+          decodingTime: decodingTime
         };
       } else {
         let b64Str = extractedData;
@@ -373,7 +378,15 @@ if (res.ok && data.status === "success") {
             finalResult = {
               type: uiType,
               url: `data:${mimeType};base64,${b64Str}`,
-              filename: data.filename || extractedFilename(decodeFile.name, uiType).replace(/\.[^.]+$/, ext)
+              filename: data.filename || extractedFilename(decodeFile.name, uiType).replace(/\.[^.]+$/, ext),
+              decodingTime: decodingTime
+            };
+        } else {
+            finalResult = {
+              type: "text",
+              text: finalResult?.text || extractedData,
+              filename: extractedFilename(decodeFile.name, "text").replace(/\.[^.]+$/, ".txt"),
+              decodingTime: decodingTime
             };
         }
       }
@@ -491,12 +504,15 @@ if (res.ok && data.status === "success") {
 
           {decodeResult&&(
             <div ref={resultRef} style={{ background:"var(--surface)", borderRadius:"10px", border:"1.5px solid #000", overflow:"hidden", boxShadow:"2px 2px 0 #000", animation:"fadeSlideIn 0.3s ease" }}>
-              <div style={{ background:"#f0faf4", padding:"16px 24px", display:"flex", alignItems:"center", gap:"12px", borderBottom:"1.5px solid #000" }}>
-                <div style={{ width:"28px", height:"28px", borderRadius:"50%", background:"var(--success)", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:"0.78rem" }}>✓</div>
-                <div>
-                  <div style={{ fontSize:"0.9rem", color:"var(--success)", fontWeight:700 }}>Giải mã thành công</div>
-                  <div style={{ fontSize:"0.72rem", color:"#5aaa72", marginTop:"2px" }}>Thuật toán: {selectedAlgo?.algo_name}</div>
+              <div style={{ background:"#f0faf4", padding:"16px 24px", display:"flex", alignItems:"center", justifyContent:"space-between", borderBottom:"1.5px solid #000" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:"12px" }}>
+                  <div style={{ width:"28px", height:"28px", borderRadius:"50%", background:"var(--success)", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:"0.78rem" }}>✓</div>
+                  <div>
+                    <div style={{ fontSize:"0.9rem", color:"var(--success)", fontWeight:700 }}>Giải mã thành công</div>
+                    <div style={{ fontSize:"0.72rem", color:"#5aaa72", marginTop:"2px" }}>Thuật toán: {selectedAlgo?.algo_name}</div>
+                  </div>
                 </div>
+                <div style={{ textAlign:"right", fontSize:"0.75rem", color:"#5aaa72", fontFamily:"monospace", fontWeight:600 }}>{decodeResult.decodingTime ?? 0}s</div>
               </div>
               <div style={{ padding:"24px" }}>
                 {decodeResult.type==="text"&&(
