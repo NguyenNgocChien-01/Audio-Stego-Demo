@@ -163,10 +163,31 @@ async def api_decode(
                 try:
                     response_data.update({"payload_type": "text", "data": raw_data.decode('utf-8')})
                 except UnicodeDecodeError:
+                    # Detect loại payload từ magic bytes
+                    payload_type = "file"
+                    if raw_data.startswith(b'RIFF') and b'WAVE' in raw_data[:12]:
+                        payload_type = "audio"
+                    elif raw_data.startswith(b'\x1a\x45\xdf\xa3'):  # WebM/Matroska
+                        payload_type = "audio"
+                    elif raw_data.startswith(b'ID3') or raw_data.startswith(b'\xff\xfb') or raw_data.startswith(b'\xff\xfa'):  # MP3
+                        payload_type = "audio"
+                    elif raw_data.startswith(b'fLaC'):  # FLAC
+                        payload_type = "audio"
+                    elif raw_data.startswith(b'OggS'):  # OGG
+                        payload_type = "audio"
+                    elif raw_data.startswith(b'\xff\xd8\xff'):  # JPEG
+                        payload_type = "image"
+                    elif raw_data.startswith(b'\x89PNG\r\n\x1a\n'):  # PNG
+                        payload_type = "image"
+                    elif raw_data.startswith(b'BM'):  # BMP
+                        payload_type = "image"
+                    elif raw_data.startswith(b'PK\x03\x04'):  # ZIP
+                        payload_type = "file"
+                    
                     response_data.update({
-                        "payload_type": "file", 
+                        "payload_type": payload_type, 
                         "data": base64.b64encode(raw_data).decode('utf-8'),
-                        "message": "Dữ liệu nhị phân (Binary)"
+                        "message": f"Dữ liệu {payload_type}" if payload_type != "file" else "Dữ liệu nhị phân (Binary)"
                     })
             else:
                 response_data.update({"payload_type": "file", "data": raw_data})
