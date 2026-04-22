@@ -1,4 +1,5 @@
 import React from "react";
+import { NotificationProvider } from "@/app/components/NotificationProvider";
 
 export const metadata = {
   title: "Nguyễn Ngọc Chiến - Portfolio",
@@ -54,8 +55,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
         `}</style>
 
-        {/* Nội dung các trang sẽ được render tại đây */}
-        {children}
+        {/* Notification System */}
+        <NotificationProvider>
+          {/* Nội dung các trang sẽ được render tại đây */}
+          {children}
+        </NotificationProvider>
         
       </body>
     </html>

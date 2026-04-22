@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { showError, showSuccess } from "@/app/utils/errorHandler";
 // import { withAuth } from "../auth/withAuth";
 // import { useAuthFetch } from "../auth/useAuthFetch"; 
 interface Algorithm { algo_id: number; algo_name: string; }
@@ -214,7 +215,7 @@ const convertToWav = async (webmBlob: Blob): Promise<File> => {
 };
 
 // ─── Component MicRecorder Cập Nhật ─────────────────────────────────────────────
-function MicRecorder({ onRecorded, label="Ghi âm từ microphone" }: { onRecorded:(f:File)=>void; label?:string }) {
+function MicRecorder({ onRecorded, label="Ghi âm từ microphone", convertToWav: convertToWavProp = true }: { onRecorded:(f:File)=>void; label?:string; convertToWav?:boolean }) {
   const[recording,setRecording]=useState(false);
   const[seconds,setSeconds]=useState(0);
   const[recUrl,setRecUrl]=useState<string|null>(null);
@@ -235,12 +236,18 @@ function MicRecorder({ onRecorded, label="Ghi âm từ microphone" }: { onRecord
         const webmBlob = new Blob(chunksRef.current,{type:"audio/webm"}); 
         
         try {
-          // Gọi hàm convert sang WAV
-          const wavFile = await convertToWav(webmBlob);
-          setRecUrl(URL.createObjectURL(wavFile)); 
-          onRecorded(wavFile); 
+          if (convertToWavProp) {
+            const wavFile = await convertToWav(webmBlob);
+            setRecUrl(URL.createObjectURL(wavFile)); 
+            onRecorded(wavFile);
+          } else {
+            const webmFile = new File([webmBlob], `mic_${Date.now()}.webm`, { type: "audio/webm" });
+            setRecUrl(URL.createObjectURL(webmFile));
+            onRecorded(webmFile);
+          }
         } catch (err) {
-          alert("Lỗi khi chuyển đổi định dạng âm thanh.");
+          showError("Lỗi khi xử lý tệp âm thanh");
+          console.error('[MIC RECORDER]', err);
         } finally {
           setProcessing(false);
           stream.getTracks().forEach(t=>t.stop()); 
@@ -252,8 +259,9 @@ function MicRecorder({ onRecorded, label="Ghi âm từ microphone" }: { onRecord
       setRecording(true);
       setSeconds(0);
       timerRef.current=setInterval(()=>setSeconds(s=>s+1),1000);
-    } catch {
-      alert("Không thể truy cập microphone.");
+    } catch (err) {
+      showError("Không thể truy cập microphone. Vui lòng kiểm tra quyền truy cập.");
+      console.error('[MICROPHONE ACCESS]', err);
     }
   };
 
@@ -273,7 +281,7 @@ function MicRecorder({ onRecorded, label="Ghi âm từ microphone" }: { onRecord
         </button>
         <div style={{ flex:1 }}>
           <div style={{ fontSize:"0.83rem", fontWeight:600, color:recording?"var(--error)":recUrl?"var(--success)":"var(--text-2)" }}>
-            {recording?"Đang ghi âm...":processing?"Đang xử lý (WebM -> WAV)...":recUrl?"Ghi xong — sẵn sàng":label}
+            {recording?"Đang ghi âm...":processing?convertToWavProp?"Đang xử lý (WebM -> WAV)...":"Đang xử lý...":recUrl?"Ghi xong — sẵn sàng":label}
           </div>
           {recording&&<div style={{ fontSize:"0.72rem", color:"var(--error)", fontFamily:"monospace", marginTop:"2px" }}>REC — {fmt(seconds)}</div>}
           {!recording&&!recUrl&&!processing&&<div style={{ fontSize:"0.72rem", color:"var(--text-muted)", marginTop:"2px" }}>Nhấn để bắt đầu ghi</div>}
@@ -357,7 +365,7 @@ function EncodePage() {
         }
       })
       .catch((err) => {
-        // console.error('[ERROR] Lỗi khi fetch config:', err.message);
+        console.error('[ERROR] Lỗi khi fetch config:', err);
       });
   }, []);
 
@@ -399,7 +407,7 @@ const handleEncode = async () => {
     if (algoRequiresPassword && encodePassword) {
       fd.append("password", encodePassword);
     } else if (algoRequiresPassword && !encodePassword) {
-       alert("Thuật toán này bắt buộc phải có mật khẩu!");
+       showError("Thuật toán này yêu cầu mật khẩu");
        setLoading(false);
        return;
     }
@@ -410,6 +418,12 @@ const handleEncode = async () => {
       } else {
         fd.append("secret_text", textMessage);
         fd.append("encrypt_text", encryptText ? "true" : "false");
+      }
+    } else if (payloadType === "audio") {
+      if (secretInputMode === "mic" && secretMicFile) {
+        fd.append("secret_file", secretMicFile);
+      } else if (payloadFile) {
+        fd.append("secret_file", payloadFile);
       }
     } else if (payloadFile) {
       fd.append("secret_file", payloadFile);
@@ -424,7 +438,7 @@ const handleEncode = async () => {
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
         const errData = await res.json();
-        alert("Lỗi hệ thống: " + (errData.detail || "Không thể xử lý"));
+        showError(errData.detail || "Không thể xử lý yêu cầu");
         return;
       }
 
@@ -459,6 +473,7 @@ const handleEncode = async () => {
         encodingTime: encodingTime
       };
       setResult(newResult);
+      showSuccess("Nhúng dữ liệu thành công!");
 
       const historyItem = {
         id: Date.now(),
@@ -480,11 +495,12 @@ const handleEncode = async () => {
         const errData = await res.json();
         errMsg = errData.detail || errData.message || errMsg;
       } catch (e) {}
-      alert("Lỗi: " + errMsg);
+      showError(errMsg);
+      console.error('[ENCODE REQUEST]', { status: res.status, message: errMsg });
     }
   } catch (e) {
-    alert("Lỗi kết nối máy chủ");
-    console.error(e);
+    showError("Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối mạng.");
+    console.error('[ENCODE ERROR]', e);
   } finally {
     setLoading(false);
   }
@@ -505,8 +521,10 @@ const handleEncode = async () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
-    } catch {
-      alert("Không thể tải tệp. Vui lòng thử lại.");
+      showSuccess("Tệp đã tải xuống thành công");
+    } catch (err) {
+      showError("Không thể tải tệp. Vui lòng thử lại.");
+      console.error('[DOWNLOAD]', err);
     }
   };
   return(
@@ -669,7 +687,7 @@ const handleEncode = async () => {
                       ))}
                     </div>
                     {secretInputMode==="mic"?(
-                      <MicRecorder onRecorded={f=>setSecretMicFile(f)} label="Ghi âm thông điệp bí mật" />
+                      <MicRecorder convertToWav={false} onRecorded={f=>setSecretMicFile(f)} label="Ghi âm thông điệp bí mật" />
                     ):(
                       <div onClick={()=>document.getElementById("payloadFile")?.click()} style={{ border:"2px solid #000", borderRadius:"8px", padding:"20px", textAlign:"center", cursor:"pointer", background:payloadFile?"#f9f6f0":"var(--surface-2)" }}>
                         <input id="payloadFile" type="file" accept={selectedPayload.accept} style={{display:"none"}} onChange={e=>setPayloadFile(e.target.files?.[0]||null)} />

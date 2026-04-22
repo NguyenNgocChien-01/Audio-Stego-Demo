@@ -13,6 +13,12 @@ function extFromMimeType(mime?: string | null): string {
   if (mime.includes("png")) return ".png";
   if (mime.includes("bmp")) return ".bmp";
   if (mime.includes("wav")) return ".wav";
+  if (mime.includes("webm")) return ".webm";
+  if (mime.includes("mpeg") || mime.includes("mp3")) return ".mp3";
+  if (mime.includes("flac")) return ".flac";
+  if (mime.includes("ogg")) return ".ogg";
+  if (mime.includes("aac")) return ".aac";
+  if (mime.includes("audio")) return ".webm";
   if (mime.includes("zip")) return ".zip";
   if (mime.includes("pdf")) return ".pdf";
   return "." + mime.split('/')[1]; 
@@ -344,18 +350,30 @@ if (res.ok && data.status === "success") {
         let mimeType = data.mime_type || "application/octet-stream";
         let uiType = rawType === "binary" ? "file" : (rawType || "file");
 
-        if (typeof b64Str === "string") {
+if (typeof b64Str === "string") {
+          // Xử lý hình ảnh
           if ((!data.mime_type || uiType === "file") && b64Str.startsWith("/9j/")) { ext = ".jpg"; mimeType = "image/jpeg"; uiType = "image"; }
           else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("iVBORw")) { ext = ".png"; mimeType = "image/png"; uiType = "image"; }
           else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("Qk0")) { ext = ".bmp"; mimeType = "image/bmp"; uiType = "image"; }
-          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("UklGR")) { ext = ".wav"; mimeType = "audio/wav"; uiType = "audio"; }
+          
+          // Xử lý âm thanh
+          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("UklGR")) { ext = ".wav"; mimeType = "audio/wav"; uiType = "audio"; } // RIFF -> UklGR
+          else if ((!data.mime_type || uiType === "file") && (b64Str.startsWith("GkXf") || b64Str.startsWith("G0Xf") || b64Str.startsWith("GkXp"))) { ext = ".webm"; mimeType = "audio/webm"; uiType = "audio"; } // WebM/Matroska -> GkXf*
+          else if ((!data.mime_type || uiType === "file") && (b64Str.startsWith("//") || b64Str.startsWith("/+") || b64Str.startsWith("SUQz"))) { ext = ".mp3"; mimeType = "audio/mpeg"; uiType = "audio"; } // ID3 -> SUQz
+          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("ZkxhQ")) { ext = ".flac"; mimeType = "audio/flac"; uiType = "audio"; } // fLaC -> ZkxhQ
+          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("T2dnU")) { ext = ".ogg"; mimeType = "audio/ogg"; uiType = "audio"; } // OggS -> T2dnU
+          
+          // Xử lý tài liệu nén
           else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("UEsDB")) { ext = ".zip"; mimeType = "application/zip"; uiType = "file"; }
           else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("JVBER")) { ext = ".pdf"; mimeType = "application/pdf"; uiType = "file"; }
+          
+          // Fallback từ rawType: nếu backend báo audio nhưng không match magic bytes
+          else if (rawType === "audio" && ext === ".bin") { ext = ".webm"; mimeType = "audio/webm"; uiType = "audio"; }
         }
 
         // --- TÍNH NĂNG SMART TEXT DETECTOR (SỬA LỖI .BIN) ---
         let isForcedText = false;
-        if (ext === ".bin" && typeof b64Str === "string") {
+        if (ext === ".bin" && typeof b64Str === "string" && rawType !== "audio" && rawType !== "image" && rawType !== "file") {
             try {
                 // Cố gắng giải mã ngược chuỗi Base64 sang chuỗi UTF-8 tiếng Việt
                 const decodedText = decodeURIComponent(escape(window.atob(b64Str)));
