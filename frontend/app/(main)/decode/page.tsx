@@ -23,6 +23,7 @@ function extFromMimeType(mime?: string | null): string {
   if (mime.includes("pdf")) return ".pdf";
   return "." + mime.split('/')[1]; 
 }
+
 // ─── STFT Viewer (sáng, dễ đọc) ──────────────────────────────────────────────
 function STFTViewer({ src, label, accentLabel }: { src: string; label: string; accentLabel?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -274,7 +275,6 @@ function logBug(action: string, error: any, context: Record<string, any> = {}): 
   console.groupEnd();
 }
 // Trong hàm handleDecode của DecodePage
-
 const handleDecode = async () => {
   if (!decodeFile) return;
   
@@ -292,7 +292,6 @@ const handleDecode = async () => {
     fd.append("algo_id", selectedAlgoId);
     fd.append("stego_audio", decodeFile);
     
-    // SỬA LỖI RANDOM LSB: Chắc chắn gửi mật khẩu nếu có
     if (decodePassword) {
        fd.append("password", decodePassword);
     }
@@ -303,109 +302,133 @@ const handleDecode = async () => {
     });
     
     const data = await res.json();
-    // // --- ĐOẠN DEBUG (THÊM VÀO) ---
-    // console.log("=== RAW DATA TỪ BACKEND ===");
-    // console.log("Status:", data.status);
-    // console.log("Type (từ API):", data.type);
-    // console.log("Payload Type (từ API):", data.payload_type);
-    // console.log("Content Text:", data.content_text ? "CÓ" : "KHÔNG");
-    // console.log("Data length/preview:", typeof data.data === 'string' ? data.data.substring(0, 20) + "..." : typeof data.data);
-    // // -----------------------------
-if (res.ok && data.status === "success") {
+    
+    if (res.ok && data.status === "success") {
       const endTime = performance.now();
-      const decodingTime = Math.round((endTime - startTime) / 10) / 100; // Làm tròn đến 2 chữ số thập phân
-      
-      let rawType = data.payload_type || data.type || "";
-      let extractedData = data.data || data.content_text || data.text || "";
-      
-      const isBase64File = typeof extractedData === "string" && (
-          extractedData.startsWith("data:") || 
-          extractedData.startsWith("/9j/") || 
-          extractedData.startsWith("iVBORw") || 
-          extractedData.startsWith("UklGR") || 
-          extractedData.startsWith("UEsDB") || 
-          extractedData.startsWith("JVBER") ||
-          extractedData.startsWith("Qk0")
-      );
+      const decodingTime = Math.round((endTime - startTime) / 10) / 100;
 
-      let isText = rawType === "text" || data.content_text !== undefined || 
-                   (typeof extractedData === "string" && extractedData.length > 0 && !isBase64File && rawType !== "binary" && rawType !== "file");
+      let rawType = (data.payload_type || data.type || "").toLowerCase().trim();
+      let extractedData: string = data.data || data.content_text || data.text || "";
+
+      // ─── HELPER: GIẢI MÃ BASE64 SANG VĂN BẢN UTF-8 ────────────────
+      function tryDecodeBase64ToText(b64: string): string | null {
+        try {
+          const bin = window.atob(b64);
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          let decoded = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+          
+          if (decoded.includes("||END||")) {
+              decoded = decoded.split("||END||")[0];
+          }
+          
+          decoded = decoded.replace(/\x00+$/, "");
+          if (decoded.length === 0) return null;
+
+          const errorCount = (decoded.match(/\uFFFD/g) || []).length;
+          const controlCount = (decoded.match(/[\x01-\x08\x0B\x0C\x0E-\x1F]/g) || []).length;
+          
+          if (errorCount === 0 && controlCount < decoded.length * 0.05) {
+            return decoded;
+          }
+          return null;
+        } catch {
+          return b64;
+        }
+      }
+
+      // ─── CẤU HÌNH NHẬN DIỆN CHỮ KÝ BYTE CỦA 4 NHÓM ĐỊNH DẠNG ───
+      const FILE_SIGNATURES: Record<string, { ext: string; mime: string; type: string }> = {
+        "/9j/":    { ext: ".jpg",  mime: "image/jpeg",        type: "image" },
+        "iVBORw":  { ext: ".png",  mime: "image/png",         type: "image" },
+        "Qk0":     { ext: ".bmp",  mime: "image/bmp",         type: "image" },
+        "UklGR":   { ext: ".wav",  mime: "audio/wav",         type: "audio" },
+        "GkXf":    { ext: ".webm", mime: "audio/webm",        type: "audio" }, 
+        "SUQz":    { ext: ".mp3",  mime: "audio/mpeg",        type: "audio" }, 
+        "//":      { ext: ".mp3",  mime: "audio/mpeg",        type: "audio" }, 
+        "/+":      { ext: ".mp3",  mime: "audio/mpeg",        type: "audio" },
+        "ZkxhQ":   { ext: ".flac", mime: "audio/flac",        type: "audio" },
+        "T2dnU":   { ext: ".ogg",  mime: "audio/ogg",         type: "audio" },
+        "UEsDB":   { ext: ".zip",  mime: "application/zip",   type: "file"  }, 
+        "JVBER":   { ext: ".pdf",  mime: "application/pdf",   type: "file"  },
+      };
+
+      function detectFileType(b64: string) {
+        if (b64.startsWith("data:")) {
+          const mime = b64.split(":")[1]?.split(";")[0] || "";
+          const ext  = extFromMimeType(mime);
+          const uiType = mime.startsWith("image/") ? "image"
+                     : mime.startsWith("audio/") ? "audio" : "file";
+          return { ext, mime, uiType, isFile: true, cleanB64: b64.split(",")[1] || b64 };
+        }
+        for (const [sig, info] of Object.entries(FILE_SIGNATURES)) {
+          if (sig !== "data:" && b64.startsWith(sig)) {
+            return { ext: info.ext, mime: info.mime, uiType: info.type, isFile: true, cleanB64: b64 };
+          }
+        }
+        return null;
+      }
 
       let finalResult = null;
 
-      if (isText) {
+      // ─── KỊCH BẢN 1: DỮ LIỆU ĐÍNH KÈM THÔNG TIN LÀ VĂN BẢN ────────────────
+      if (rawType === "text" || data.content_text !== undefined) {
+        let textContent = data.content_text ?? extractedData;
+
+        if (!data.content_text && typeof textContent === "string") {
+          const decoded = tryDecodeBase64ToText(textContent);
+          if (decoded !== null) textContent = decoded;
+        }
+
         finalResult = {
           type: "text",
-          text: extractedData,
+          text: textContent,
           filename: extractedFilename(decodeFile.name, "text").replace(/\.[^.]+$/, ".txt"),
-          decodingTime: decodingTime
+          decodingTime,
         };
+
+      // ─── KỊCH BẢN 2: DỮ LIỆU ĐA PHƯƠNG TIỆN, ZIP VÀ BINARY ─────────────────
       } else {
         let b64Str = extractedData;
+
+        let ext      = data.ext || extFromMimeType(data.mime_type) || "";
+        let mimeType = data.mime_type || "";
+        let uiType   = rawType === "binary" ? "file" : (rawType || "file");
+
         if (typeof b64Str === "string" && b64Str.startsWith("data:")) {
-          b64Str = b64Str.split(",")[1];
+          mimeType = mimeType || b64Str.split(":")[1]?.split(";")[0] || "";
+          b64Str   = b64Str.split(",")[1] || b64Str;
         }
 
-        let ext = data.ext || extFromMimeType(data.mime_type) || ".bin";
-        let mimeType = data.mime_type || "application/octet-stream";
-        let uiType = rawType === "binary" ? "file" : (rawType || "file");
-
-if (typeof b64Str === "string") {
-          // Xử lý hình ảnh
-          if ((!data.mime_type || uiType === "file") && b64Str.startsWith("/9j/")) { ext = ".jpg"; mimeType = "image/jpeg"; uiType = "image"; }
-          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("iVBORw")) { ext = ".png"; mimeType = "image/png"; uiType = "image"; }
-          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("Qk0")) { ext = ".bmp"; mimeType = "image/bmp"; uiType = "image"; }
-          
-          // Xử lý âm thanh
-          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("UklGR")) { ext = ".wav"; mimeType = "audio/wav"; uiType = "audio"; } // RIFF -> UklGR
-          else if ((!data.mime_type || uiType === "file") && (b64Str.startsWith("GkXf") || b64Str.startsWith("G0Xf") || b64Str.startsWith("GkXp"))) { ext = ".webm"; mimeType = "audio/webm"; uiType = "audio"; } // WebM/Matroska -> GkXf*
-          else if ((!data.mime_type || uiType === "file") && (b64Str.startsWith("//") || b64Str.startsWith("/+") || b64Str.startsWith("SUQz"))) { ext = ".mp3"; mimeType = "audio/mpeg"; uiType = "audio"; } // ID3 -> SUQz
-          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("ZkxhQ")) { ext = ".flac"; mimeType = "audio/flac"; uiType = "audio"; } // fLaC -> ZkxhQ
-          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("T2dnU")) { ext = ".ogg"; mimeType = "audio/ogg"; uiType = "audio"; } // OggS -> T2dnU
-          
-          // Xử lý tài liệu nén
-          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("UEsDB")) { ext = ".zip"; mimeType = "application/zip"; uiType = "file"; }
-          else if ((!data.mime_type || uiType === "file") && b64Str.startsWith("JVBER")) { ext = ".pdf"; mimeType = "application/pdf"; uiType = "file"; }
-          
-          // Fallback từ rawType: nếu backend báo audio nhưng không match magic bytes
-          else if (rawType === "audio" && ext === ".bin") { ext = ".webm"; mimeType = "audio/webm"; uiType = "audio"; }
+        if (!ext || ext === ".bin") {
+          const detected = detectFileType(b64Str);
+          if (detected) {
+            ext      = detected.ext;
+            mimeType = detected.mime;
+            uiType   = detected.uiType;
+            b64Str   = detected.cleanB64;
+          }
         }
 
-        // --- TÍNH NĂNG SMART TEXT DETECTOR (SỬA LỖI .BIN) ---
-        let isForcedText = false;
-        if (ext === ".bin" && typeof b64Str === "string" && rawType !== "audio" && rawType !== "image" && rawType !== "file") {
-            try {
-                // Cố gắng giải mã ngược chuỗi Base64 sang chuỗi UTF-8 tiếng Việt
-                const decodedText = decodeURIComponent(escape(window.atob(b64Str)));
-                
-                // Nếu thành công và không bị lỗi, chứng tỏ 100% đây là Text bị Backend hiểu nhầm
-                finalResult = {
-                    type: "text",
-                    text: decodedText,
-                    filename: extractedFilename(decodeFile.name, "text").replace(/\.[^.]+$/, ".txt")
-                };
-                isForcedText = true;
-            } catch (e) {
-                // Bị lỗi giải mã (Nghĩa là nó là file dữ liệu nhị phân thật sự, kệ nó)
-            }
-        }
-        // ----------------------------------------------------
-
-        // Nếu không bị ép thành Text, thì xuất ra File như bình thường
-        if (!isForcedText) {
-            finalResult = {
-              type: uiType,
-              url: `data:${mimeType};base64,${b64Str}`,
-              filename: data.filename || extractedFilename(decodeFile.name, uiType).replace(/\.[^.]+$/, ext),
-              decodingTime: decodingTime
-            };
-        } else {
+        if ((!ext || ext === ".bin") && rawType !== "audio" && rawType !== "image") {
+          const decoded = tryDecodeBase64ToText(b64Str);
+          if (decoded !== null && decoded.length > 0) {
             finalResult = {
               type: "text",
-              text: finalResult?.text || extractedData,
+              text: decoded,
               filename: extractedFilename(decodeFile.name, "text").replace(/\.[^.]+$/, ".txt"),
-              decodingTime: decodingTime
+              decodingTime,
             };
+          }
+        }
+
+        if (!finalResult) {
+          finalResult = {
+            type: uiType,
+            url: `data:${mimeType || "application/octet-stream"};base64,${b64Str}`,
+            filename: data.filename || extractedFilename(decodeFile.name, uiType).replace(/\.[^.]+$/, ext || ".bin"),
+            decodingTime,
+          };
         }
       }
 
@@ -417,20 +440,17 @@ if (typeof b64Str === "string") {
         algo: data.algo_name || selectedAlgo?.algo_name || "Unknown",
         type: "Decode",
         status: "Thành công",
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
       };
-      
       const existingHistory = JSON.parse(localStorage.getItem("stego_history") || "[]");
       existingHistory.unshift(historyItem);
       localStorage.setItem("stego_history", JSON.stringify(existingHistory.slice(0, 20)));
-    
 
     } else {
       setDecodeError(data.detail || data.message || "Giải mã thất bại. Vui lòng kiểm tra lại thuật toán hoặc mật khẩu.");
     }
   } catch (error) {
     setDecodeError("Lỗi kết nối: Không thể liên lạc với máy chủ xử lý.");
-    console.error("Decode Error:", error);
   } finally {
     setLoading(false);
   }
@@ -573,5 +593,4 @@ if (typeof b64Str === "string") {
   );
 }
 
-// export default withAuth(DecodePage)
 export default DecodePage;

@@ -226,6 +226,10 @@ function MicRecorder({ onRecorded, label="Ghi âm từ microphone", convertToWav
 
   const start=async()=>{
     try{
+      if (recUrl) {
+          URL.revokeObjectURL(recUrl);
+          setRecUrl(null);
+      }
       const stream=await navigator.mediaDevices.getUserMedia({audio:true});
       const mr=new MediaRecorder(stream);
       chunksRef.current=[];
@@ -496,7 +500,7 @@ const handleEncode = async () => {
         errMsg = errData.detail || errData.message || errMsg;
       } catch (e) {}
       showError(errMsg);
-      console.error('[ENCODE REQUEST]', { status: res.status, message: errMsg });
+      // console.error('[ENCODE REQUEST]', { status: res.status, message: errMsg });
     }
   } catch (e) {
     showError("Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối mạng.");
@@ -624,7 +628,7 @@ const handleEncode = async () => {
               <MicRecorder onRecorded={f=>{setEncodeFile(f);setResult(null);}} label="Ghi âm cover audio" />
             ):(
               <div onClick={()=>document.getElementById("coverFileInput")?.click()} style={{ border:"2px solid #000", borderRadius:"8px", padding:"24px", textAlign:"center", cursor:"pointer", background:encodeFile?"#f9f6f0":"var(--surface-2)" }}>
-                <input id="coverFileInput" type="file" accept="audio/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f){setEncodeFile(f);setResult(null);}}} />
+                <input id="coverFileInput" type="file" accept=".wav,.flac,audio/wav,audio/flac" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f){setEncodeFile(f);setResult(null);}}} />
                 {encodeFile?(<div><div style={{fontSize:"0.875rem",fontWeight:700,color:"var(--primary)"}}>{encodeFile.name}</div><div style={{fontSize:"0.75rem",color:"#888",marginTop:"4px"}}>{fmtBytes(encodeFile.size)}</div></div>):(<div><div style={{fontSize:"0.85rem",color:"#888"}}>Kéo thả hoặc nhấp để chọn</div><div style={{fontSize:"0.75rem",color:"#bbb",marginTop:"4px"}}>WAV, MP3, FLAC...</div></div>)}
               </div>
             )}
