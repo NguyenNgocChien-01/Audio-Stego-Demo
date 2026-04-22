@@ -76,7 +76,7 @@ class Stego:
             payload_bits_needed = len(full_payload) * 8
             
             # Tính toán k tối ưu
-            k = max(1, min(math.ceil(payload_bits_needed / num_slots), 6))
+            k = max(1, min(math.ceil(payload_bits_needed / num_slots), 4))
 
             if payload_bits_needed > num_slots * k:
                 return {"status": "error", "message": f"Dung lượng Audio không đủ chứa dữ liệu (Yêu cầu: {payload_bits_needed} bits)."}
@@ -162,7 +162,7 @@ class Stego:
                 if pos != -1:
                     extracted_data = all_bytes[:pos]
                     
-                    # QUAN TRỌNG: Mã hóa Base64 trước khi trả về để tránh lỗi API JSON 
+                    
                     b64_data = base64.b64encode(extracted_data).decode('utf-8')
                     
                     return {
